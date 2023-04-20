@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "971107979117",
+    "firebase_url": "https://sockettemp-79575-default-rtdb.firebaseio.com",
+    "project_id": "sockettemp-79575",
+    "storage_bucket": "sockettemp-79575.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971107979117:android:a6a35ae73ec9f81f5e5464",
+        "android_client_info": {
+          "package_name": "com.example.temp_monitor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971107979117-tte2abl9p7bcd446p65b4v0lldml81om.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3zh2m-Ye4ZKiMKrX9AYjCZ2YzMKubbTo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971107979117-tte2abl9p7bcd446p65b4v0lldml81om.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
