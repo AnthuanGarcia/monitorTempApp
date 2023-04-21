@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import './src/ambient.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,15 +29,6 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -51,45 +45,33 @@ class _MyHomePageState extends State<MyHomePage> {
     Stream<DatabaseEvent> stream = db.onValue;
 
     return Scaffold(
-        appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
-          title: Text(widget.title),
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: Center(
+        child: StreamBuilder(
+          stream: stream,
+          builder: (context, snap) {
+            List<Widget> children = <Widget>[const Text("Nada")];
+
+            if (snap.hasData) {
+              //Ambient data = Ambient.fromDbSnap(
+              //    snap.data!.snapshot.value as Map<Object?, Object?>);
+
+              dynamic data = snap.data!.snapshot.value;
+
+              children = <Widget>[
+                Text("Temperature: ${data["test"]["temperature"]}"),
+                Text("Humidity: ${data["test"]["humidity"]}"),
+                Text("Heat Index: ${data["test"]["heatIndex"]}"),
+                Text("Movement: ${data["test"]["move"]}"),
+              ];
+            }
+
+            return Column(children: children);
+          },
         ),
-        body: Center(
-          // Center is a layout widget. It takes a single child and positions it
-          // in the middle of the parent.
-          child: Column(
-            // Column is also a layout widget. It takes a list of children and
-            // arranges them vertically. By default, it sizes itself to fit its
-            // children horizontally, and tries to be as tall as its parent.
-            //
-            // Invoke "debug painting" (press "p" in the console, choose the
-            // "Toggle Debug Paint" action from the Flutter Inspector in Android
-            // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-            // to see the wireframe for each widget.
-            //
-            // Column has various properties to control how it sizes itself and
-            // how it positions its children. Here we use mainAxisAlignment to
-            // center the children vertically; the main axis here is the vertical
-            // axis because Columns are vertical (the cross axis would be
-            // horizontal).
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              StreamBuilder(
-                  stream: stream,
-                  builder: (context, snap) {
-                    Widget wid = const Text("Nada");
-
-                    if (snap.hasData) {
-                      wid = Text(snap.data!.snapshot.value.toString());
-                    }
-
-                    return wid;
-                  })
-            ],
-          ),
-        ) // This trailing comma makes auto-formatting nicer for build methods.
-        );
+      ),
+    );
   }
 }
