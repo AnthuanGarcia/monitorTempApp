@@ -2,23 +2,24 @@ import 'dart:async';
 import 'dart:ui';
 import 'dart:convert';
 
+import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 //import 'package:flutter_background_service/flutter_background_service.dart';
-//import 'package:flutter_background_service_android/flutter_background_service_android.dart';
+import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 //import 'package:workmanager/workmanager.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import './src/ambient.dart';
 
-const channel = AndroidNotificationChannel(
+/*const channel = AndroidNotificationChannel(
   'temp_monitor', // id
   'Temperature Monitor', // title
   description: 'Channel for monitoring temperature in site', // description
-  importance: Importance.high, // importance must be at low or higher level
-);
+  importance: Importance.low, // importance must be at low or higher level
+);*/
 
 /*@pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -34,21 +35,64 @@ const monitorTask = "monitor-temp";
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await AndroidAlarmManager.initialize();
-  //await initializeService();
-  await AndroidAlarmManager.periodic(
+  //await AndroidAlarmManager.initialize();
+  //await setupFlutterNotifications();
+  await initializeService();
+  /*await AndroidAlarmManager.periodic(
     const Duration(seconds: 15),
-    0,
-    printHello,
-  );
+    8698,
+    temperatureAlert,
+    rescheduleOnReboot: true,
+  );*/
   runApp(const MyApp());
 }
 
-@pragma('vm:entry-point')
-void printHello() {
-  final DateTime now = DateTime.now();
-  print("[$now] Hello, world! function='$printHello'");
-}
+/*@pragma('vm:entry-point')
+void temperatureAlert() async {
+  final data = await http.get(
+    Uri.parse(
+      "https://sockettemp-79575-default-rtdb.firebaseio.com/test.json?",
+    ),
+  );
+
+  Ambient ambient =
+      Ambient.fromJson(json.decode(data.body) as Map<String, dynamic>);
+
+  if (ambient.humidity >= 50) {
+    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+        FlutterLocalNotificationsPlugin();
+
+    String details =
+        "Temperatura: ${ambient.temperature}°C<br>Humedad: ${ambient.humidity}%<br>Índice de calor: ${ambient.heatIndex.toStringAsFixed(2)}°C";
+
+    flutterLocalNotificationsPlugin.show(
+      8698,
+      "Alerta de Temperatura",
+      "",
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          channel.id,
+          channel.name,
+          icon: 'ic_bg_service_small',
+          styleInformation: BigTextStyleInformation(
+            details,
+            htmlFormatBigText: true,
+            htmlFormatContent: true,
+          ),
+        ),
+      ),
+    );
+  }
+}*/
+
+/*Future<void> setupFlutterNotifications() async {
+  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+}*/
 
 /*
 @pragma('vm:entry-point')
@@ -60,15 +104,27 @@ void callbackDispatcher() {
   });
 }*/
 
-/*Future<void> initializeService() async {
+Future<void> initializeService() async {
+  await AwesomeNotifications().initialize(
+    null, //'resource://drawable/res_app_icon',//
+    [
+      NotificationChannel(
+        channelKey: 'alerts',
+        channelName: 'Alerts',
+        channelDescription: 'Notification tests as alerts',
+        playSound: true,
+        onlyAlertOnce: true,
+        groupAlertBehavior: GroupAlertBehavior.Children,
+        importance: NotificationImportance.Low,
+        defaultPrivacy: NotificationPrivacy.Public,
+        defaultColor: Colors.deepPurple,
+        ledColor: Colors.deepPurple,
+      )
+    ],
+    debug: true,
+  );
+
   final service = FlutterBackgroundService();
-
-  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(channel);
 
   await service.configure(
     androidConfiguration: AndroidConfiguration(
@@ -77,9 +133,9 @@ void callbackDispatcher() {
 
       // auto start service
       autoStart: true,
-      isForegroundMode: false,
+      isForegroundMode: true,
 
-      notificationChannelId: channel.id,
+      notificationChannelId: 'alerts',
       initialNotificationTitle: 'Obteniendo Temperatura',
       initialNotificationContent: 'Initializing',
       foregroundServiceNotificationId: 888,
@@ -88,15 +144,14 @@ void callbackDispatcher() {
   );
 
   service.startService();
-}*/
+}
 
-/*@pragma('vm:entry-point')
+@pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
   await Firebase.initializeApp();
   DartPluginRegistrant.ensureInitialized();
 
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  final notification = AwesomeNotifications();
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
@@ -156,8 +211,6 @@ void onStart(ServiceInstance service) async {
     }
   });*/
 
-  bool onlyOne = false;
-
   Timer.periodic(const Duration(seconds: 10), (timer) async {
     final data = await http.get(
       Uri.parse(
@@ -167,52 +220,33 @@ void onStart(ServiceInstance service) async {
     Ambient ambient =
         Ambient.fromJson(json.decode(data.body) as Map<String, dynamic>);
 
-    if (ambient.humidity < 50) {
-      onlyOne = false;
-      return;
-    }
-
-    if (onlyOne) {
-      return;
-    }
-
-    onlyOne = true;
     String details =
         "Humedad: ${ambient.humidity}%<br>Índice de calor: ${ambient.heatIndex.toStringAsFixed(2)}°C";
 
     if (service is AndroidServiceInstance) {
-      //if (await service.isForegroundService()) {
-      /// OPTIONAL for use custom notification
-      /// the notification id must be equals with AndroidConfiguration when you call configure() method.
-      flutterLocalNotificationsPlugin.show(
-        888,
-        'Temperatura: ${ambient.temperature}°C',
-        "",
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            channel.id,
-            channel.name,
-            icon: 'ic_bg_service_small',
-            ongoing: false,
-            styleInformation: BigTextStyleInformation(
-              details,
-              htmlFormatBigText: true,
-              htmlFormatContent: true,
-            ),
+      if (await service.isForegroundService()) {
+        /// OPTIONAL for use custom notification
+        /// the notification id must be equals with AndroidConfiguration when you call configure() method.
+        notification.createNotification(
+          content: NotificationContent(
+            id: 888,
+            channelKey: 'alerts',
+            title: 'Prueba',
+            body: details,
           ),
-        ),
-      );
-      //}
-    }
+        );
+        //}
+      }
 
-    service.invoke(
-      'update',
-      {
-        "current_temp": ambient.temperature,
-      },
-    );
+      service.invoke(
+        'update',
+        {
+          "current_temp": ambient.temperature,
+        },
+      );
+    }
   });
-}*/
+}
 
 /*Future<void> setupFlutterNotifications() async {
   if (isFlutterLocalNotificationsInitialized) {
