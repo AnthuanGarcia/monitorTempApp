@@ -2,12 +2,13 @@ import 'dart:async';
 import 'dart:ui';
 import 'dart:convert';
 
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 //import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 //import 'package:workmanager/workmanager.dart';
@@ -200,8 +201,7 @@ void onStart(ServiceInstance service) async {
   await Firebase.initializeApp();
   DartPluginRegistrant.ensureInitialized();
 
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  final notification = AwesomeNotifications();
 
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
@@ -261,8 +261,6 @@ void onStart(ServiceInstance service) async {
     }
   });*/
 
-  bool onlyOne = false;
-
   Timer.periodic(const Duration(seconds: 10), (timer) async {
     final data = await http.get(
       Uri.parse(
@@ -272,50 +270,31 @@ void onStart(ServiceInstance service) async {
     Ambient ambient =
         Ambient.fromJson(json.decode(data.body) as Map<String, dynamic>);
 
-    if (ambient.humidity < 50) {
-      onlyOne = false;
-      return;
-    }
-
-    if (onlyOne) {
-      return;
-    }
-
-    onlyOne = true;
     String details =
         "Humedad: ${ambient.humidity}%<br>Índice de calor: ${ambient.heatIndex.toStringAsFixed(2)}°C";
 
     if (service is AndroidServiceInstance) {
-      //if (await service.isForegroundService()) {
-      /// OPTIONAL for use custom notification
-      /// the notification id must be equals with AndroidConfiguration when you call configure() method.
-      flutterLocalNotificationsPlugin.show(
-        888,
-        'Temperatura: ${ambient.temperature}°C',
-        "",
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            channel.id,
-            channel.name,
-            icon: 'ic_bg_service_small',
-            ongoing: false,
-            styleInformation: BigTextStyleInformation(
-              details,
-              htmlFormatBigText: true,
-              htmlFormatContent: true,
-            ),
+      if (await service.isForegroundService()) {
+        /// OPTIONAL for use custom notification
+        /// the notification id must be equals with AndroidConfiguration when you call configure() method.
+        notification.createNotification(
+          content: NotificationContent(
+            id: 888,
+            channelKey: 'alerts',
+            title: 'Prueba',
+            body: details,
           ),
-        ),
-      );
-      //}
-    }
+        );
+        //}
+      }
 
-    service.invoke(
-      'update',
-      {
-        "current_temp": ambient.temperature,
-      },
-    );
+      service.invoke(
+        'update',
+        {
+          "current_temp": ambient.temperature,
+        },
+      );
+    }
   });
 }*/
 
