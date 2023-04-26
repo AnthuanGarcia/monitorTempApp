@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:ui';
 import 'dart:convert';
 
-import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
@@ -22,7 +21,7 @@ import './src/ambient.dart';
   importance: Importance.high, // importance must be at low or higher level
 );*/
 
-const monitorTask = "monitor-temp";
+//const monitorTask = "monitor-temp";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -94,7 +93,7 @@ Future<void> initializeServices() async {
       'Foreground Monitor',
       importance: Importance.low,
     ),
-    (ServiceInstance a) => 0,
+    onStartFore,
     id: 1234,
     title: "Temperature Monitor",
     initCont: "Init",
@@ -107,7 +106,7 @@ Future<void> initializeServices() async {
       'Alert Monitor',
       importance: Importance.high,
     ),
-    (ServiceInstance a) => 0,
+    onStartAlert,
     id: 5678,
     title: "Alert Monitor",
     foreground: false,
@@ -158,6 +157,20 @@ void onStartFore(ServiceInstance service) async {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  if (service is AndroidServiceInstance) {
+    service.on('setAsForeground').listen((event) {
+      service.setAsForegroundService();
+    });
+
+    service.on('setAsBackground').listen((event) {
+      service.setAsBackgroundService();
+    });
+  }
+
+  service.on('stopService').listen((event) {
+    service.stopSelf();
+  });
+
   Timer.periodic(const Duration(seconds: 60), (timer) async {
     if (service is AndroidServiceInstance) {
       if (await service.isForegroundService()) {
@@ -194,6 +207,68 @@ void onStartFore(ServiceInstance service) async {
       }
     }
   });
+}
+
+@pragma('vm:entry-point')
+void onStartAlert(ServiceInstance service) async {
+  DartPluginRegistrant.ensureInitialized();
+
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  if (service is AndroidServiceInstance) {
+    service.on('setAsForeground').listen((event) {
+      service.setAsForegroundService();
+    });
+
+    service.on('setAsBackground').listen((event) {
+      service.setAsBackgroundService();
+    });
+  }
+
+  service.on('stopService').listen((event) {
+    service.stopSelf();
+  });
+
+  Timer.periodic(
+    const Duration(seconds: 30),
+    (timer) async {
+      if (service is AndroidServiceInstance) {
+        final data = await http.get(
+          Uri.parse(
+            "https://sockettemp-79575-default-rtdb.firebaseio.com/test.json?",
+          ),
+        );
+
+        Ambient ambient =
+            Ambient.fromJson(json.decode(data.body) as Map<String, dynamic>);
+
+        if (ambient.humidity <= 50) return;
+
+        String details =
+            "Humedad: ${ambient.humidity}%<br>Índice de calor: ${ambient.heatIndex.toStringAsFixed(2)}°C";
+
+        flutterLocalNotificationsPlugin.show(
+          5678,
+          'Alerta de Temperatura: ${ambient.temperature}°C',
+          "",
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              'temp_monitor_alert',
+              'Alert Monitor',
+              icon: 'ic_bg_service_small',
+              ongoing: false,
+              styleInformation: BigTextStyleInformation(
+                details,
+                htmlFormatBigText: true,
+                htmlFormatContent: true,
+              ),
+            ),
+          ),
+        );
+      }
+    },
+  );
 }
 
 /*@pragma('vm:entry-point')
