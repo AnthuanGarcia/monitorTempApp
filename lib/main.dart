@@ -2,53 +2,79 @@ import 'dart:async';
 import 'dart:ui';
 import 'dart:convert';
 
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 //import 'package:flutter_background_service/flutter_background_service.dart';
-//import 'package:flutter_background_service_android/flutter_background_service_android.dart';
+import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 //import 'package:workmanager/workmanager.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import './src/ambient.dart';
 
-const channel = AndroidNotificationChannel(
+/*const channel = AndroidNotificationChannel(
   'temp_monitor', // id
   'Temperature Monitor', // title
   description: 'Channel for monitoring temperature in site', // description
   importance: Importance.high, // importance must be at low or higher level
-);
-
-/*@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  await setupFlutterNotifications();
-  showFlutterNotification(message);
-
-  print("Handling a background message: ${message.messageId}");
-}*/
+);*/
 
 const monitorTask = "monitor-temp";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await AndroidAlarmManager.initialize();
-  //await initializeService();
-  await AndroidAlarmManager.periodic(
+  //await AndroidAlarmManager.initialize();
+  await initializeServices();
+  /*await AndroidAlarmManager.periodic(
     const Duration(seconds: 15),
-    0,
-    printHello,
-  );
+    8698,
+    monitorTemp,
+    rescheduleOnReboot: true,
+  );*/
   runApp(const MyApp());
 }
 
-@pragma('vm:entry-point')
-void printHello() {
-  final DateTime now = DateTime.now();
-  print("[$now] Hello, world! function='$printHello'");
-}
+/*@pragma('vm:entry-point')
+void monitorTemp() async {
+  /*final data = await http.get(
+    Uri.parse(
+      "https://sockettemp-79575-default-rtdb.firebaseio.com/test.json?",
+    ),
+  );
+
+  Ambient ambient = Ambient.fromJson(
+    json.decode(data.body) as Map<String, dynamic>,
+  );*/
+
+  final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  const channel = AndroidNotificationChannel(
+    'temp_monitor',
+    'Temperature Monitor', // title
+    description: 'Channel for monitoring temperature in site', // description
+    importance: Importance.high, // importance must be at low or higher level
+  );
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
+  flutterLocalNotificationsPlugin.show(
+    8698,
+    "Hola",
+    "",
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'temp_monitor',
+        'Temperature Monitor',
+      ),
+    ),
+  );
+}*/
 
 /*
 @pragma('vm:entry-point')
@@ -60,7 +86,41 @@ void callbackDispatcher() {
   });
 }*/
 
-/*Future<void> initializeService() async {
+Future<void> initializeServices() async {
+  await configService(
+    const AndroidNotificationChannel(
+      'temp_monitor_fore',
+      'Foreground Monitor',
+      importance: Importance.low,
+    ),
+    (ServiceInstance a) => 0,
+    id: 1234,
+    title: "Temperature Monitor",
+    initCont: "Init",
+    foreground: true,
+  );
+
+  await configService(
+    const AndroidNotificationChannel(
+      'temp_monitor_alert',
+      'Alert Monitor',
+      importance: Importance.high,
+    ),
+    (ServiceInstance a) => 0,
+    id: 5678,
+    title: "Alert Monitor",
+    foreground: false,
+  );
+}
+
+Future<void> configService(
+  AndroidNotificationChannel channel,
+  dynamic Function(ServiceInstance) callback, {
+  required int id,
+  String title = "",
+  String initCont = "",
+  bool foreground = false,
+}) async {
   final service = FlutterBackgroundService();
 
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -73,22 +133,67 @@ void callbackDispatcher() {
   await service.configure(
     androidConfiguration: AndroidConfiguration(
       // this will be executed when app is in foreground or background in separated isolate
-      onStart: onStart,
+      onStart: callback,
 
       // auto start service
       autoStart: true,
-      isForegroundMode: false,
+      isForegroundMode: foreground,
 
       notificationChannelId: channel.id,
-      initialNotificationTitle: 'Obteniendo Temperatura',
-      initialNotificationContent: 'Initializing',
-      foregroundServiceNotificationId: 888,
+      initialNotificationTitle: title,
+      initialNotificationContent: initCont,
+      foregroundServiceNotificationId: id,
     ),
     iosConfiguration: IosConfiguration(),
   );
 
   service.startService();
-}*/
+}
+
+@pragma('vm:entry-point')
+void onStartFore(ServiceInstance service) async {
+  DartPluginRegistrant.ensureInitialized();
+
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  Timer.periodic(const Duration(seconds: 60), (timer) async {
+    if (service is AndroidServiceInstance) {
+      if (await service.isForegroundService()) {
+        final data = await http.get(
+          Uri.parse(
+            "https://sockettemp-79575-default-rtdb.firebaseio.com/test.json?",
+          ),
+        );
+
+        Ambient ambient =
+            Ambient.fromJson(json.decode(data.body) as Map<String, dynamic>);
+
+        String details =
+            "Humedad: ${ambient.humidity}%<br>Índice de calor: ${ambient.heatIndex.toStringAsFixed(2)}°C";
+
+        flutterLocalNotificationsPlugin.show(
+          1234,
+          'Temperatura: ${ambient.temperature}°C',
+          "",
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              'temp_monitor_fore',
+              'Foreground Monitor',
+              icon: 'ic_bg_service_small',
+              ongoing: false,
+              styleInformation: BigTextStyleInformation(
+                details,
+                htmlFormatBigText: true,
+                htmlFormatContent: true,
+              ),
+            ),
+          ),
+        );
+      }
+    }
+  });
+}
 
 /*@pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
