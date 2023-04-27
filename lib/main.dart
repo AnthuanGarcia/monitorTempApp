@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'dart:convert';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
@@ -23,18 +24,75 @@ import './src/ambient.dart';
 
 //const monitorTask = "monitor-temp";
 
+late AndroidNotificationChannel channel;
+late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+bool isFlutterLocalNotificationsInitialized = false;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  //await AndroidAlarmManager.initialize();
-  await initializeServices();
-  /*await AndroidAlarmManager.periodic(
-    const Duration(seconds: 15),
-    8698,
-    monitorTemp,
-    rescheduleOnReboot: true,
-  );*/
+  await FirebaseMessaging.instance.setAutoInitEnabled(true);
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   runApp(const MyApp());
+}
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  await setupFlutterNotifications();
+  showFlutterNotification(message);
+  print('Handling a background message ${message.messageId}');
+}
+
+Future<void> setupFlutterNotifications() async {
+  if (isFlutterLocalNotificationsInitialized) {
+    return;
+  }
+
+  channel = const AndroidNotificationChannel(
+    'temp_monitor', // id
+    'Temperature Monitor', // title
+    description: 'Get temperature in real time', // description
+    importance: Importance.high,
+  );
+
+  flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  isFlutterLocalNotificationsInitialized = true;
+}
+
+void showFlutterNotification(RemoteMessage message) {
+  RemoteNotification? notification = message.notification;
+  AndroidNotification? android = message.notification?.android;
+
+  if (notification != null && android != null) {
+    flutterLocalNotificationsPlugin.show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          channel.id,
+          channel.name,
+          channelDescription: channel.description,
+          // TODO add a proper drawable resource to android, for now using
+          //      one that already exists in example app.
+          icon: 'launch_background',
+        ),
+      ),
+    );
+  }
 }
 
 /*@pragma('vm:entry-point')
@@ -86,7 +144,7 @@ void callbackDispatcher() {
   });
 }*/
 
-Future<void> initializeServices() async {
+/*Future<void> initializeServices() async {
   await configService(
     const AndroidNotificationChannel(
       'temp_monitor_fore',
@@ -269,7 +327,7 @@ void onStartAlert(ServiceInstance service) async {
       }
     },
   );
-}
+}*/
 
 /*@pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
