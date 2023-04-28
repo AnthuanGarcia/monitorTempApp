@@ -13,6 +13,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 //import 'package:workmanager/workmanager.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import './src/ambient.dart';
 
 /*const channel = AndroidNotificationChannel(
@@ -23,16 +24,20 @@ import './src/ambient.dart';
 );*/
 
 //const monitorTask = "monitor-temp";
+const serverHost = "10.9.9.115:8080";
 
 late AndroidNotificationChannel channel;
 late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 bool isFlutterLocalNotificationsInitialized = false;
+
+late SharedPreferences prefs;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await FirebaseMessaging.instance.setAutoInitEnabled(true);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  prefs = await SharedPreferences.getInstance();
   runApp(const MonitorTemp());
 }
 
@@ -40,6 +45,7 @@ void main() async {
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   await setupFlutterNotifications();
+  await FirebaseMessaging.instance.setAutoInitEnabled(true);
   showFlutterNotification(message);
   print('Handling a background message ${message.messageId}');
 }
@@ -512,8 +518,35 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   DatabaseReference db = FirebaseDatabase.instance.ref();
-  String d = "";
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  @override
+  void initState() {
+    super.initState();
+
+    FirebaseMessaging.onMessage.listen(showFlutterNotification);
+
+    final token = prefs.getString("user_token");
+    if (token != null) return;
+
+    print("No deberia llegar hasta aqui");
+
+    messaging.getToken().then(
+      (token) {
+        http.post(
+          Uri.http(
+            serverHost,
+            '/registerToken',
+            {'token': token},
+          ),
+        );
+
+        prefs.setString("user_token", token!);
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
