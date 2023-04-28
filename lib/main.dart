@@ -33,7 +33,7 @@ void main() async {
   await Firebase.initializeApp();
   await FirebaseMessaging.instance.setAutoInitEnabled(true);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  runApp(const MyApp());
+  runApp(const MonitorTemp());
 }
 
 @pragma('vm:entry-point')
@@ -487,8 +487,8 @@ void showFlutterNotification(RemoteMessage message) {
   }
 }
 */
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MonitorTemp extends StatelessWidget {
+  const MonitorTemp({super.key});
 
   @override
   Widget build(BuildContext context) {
