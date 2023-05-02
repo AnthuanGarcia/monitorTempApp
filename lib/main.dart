@@ -3,16 +3,18 @@ import 'dart:ui';
 import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:temp_monitor/src/shader_painter.dart';
 import './src/ambient.dart';
 
 //const serverHost = "10.9.9.115:8080";
-const serverHost = "192.168.1.168:8080";
+const serverHost = "push-alerts.onrender.com";
 
 const channel = AndroidNotificationChannel(
   'temp_monitor', // id
@@ -138,11 +140,18 @@ class _MonitorPageState extends State<MonitorPage> {
   DatabaseReference db = FirebaseDatabase.instance.ref();
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
+  FragmentShader? shader;
+  Duration previous = Duration.zero;
+  late final Ticker _ticker;
+  double dt = 0.0;
+
   @override
   void initState() {
     super.initState();
 
     //FirebaseMessaging.onMessage.listen(showFlutterNotification);
+
+    loadShader();
 
     final token = prefs.getString("user_token");
     if (token != null) return;
@@ -153,7 +162,7 @@ class _MonitorPageState extends State<MonitorPage> {
       (token) {
         http
             .post(
-              Uri.http(
+              Uri.https(
                 serverHost,
                 '/registerToken',
                 {'token': token},
@@ -167,6 +176,32 @@ class _MonitorPageState extends State<MonitorPage> {
   }
 
   @override
+  void dispose() {
+    _ticker.stop();
+    _ticker.dispose();
+    super.dispose();
+  }
+
+  void loadShader() {
+    final program = FragmentProgram.fromAsset("shaders/test.frag")
+        .then((value) => shader = value.fragmentShader());
+
+    setState(() {});
+
+    _ticker = Ticker(_tick);
+    _ticker.start();
+  }
+
+  void _tick(Duration timestp) {
+    final delta = timestp - previous;
+    previous = timestp;
+
+    setState(() {
+      dt += delta.inMicroseconds / Duration.microsecondsPerSecond;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     Stream<DatabaseEvent> stream = db.onValue;
 
@@ -175,25 +210,30 @@ class _MonitorPageState extends State<MonitorPage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: StreamBuilder(
-          stream: stream,
-          builder: (context, snap) {
-            List<Widget> children = <Widget>[const Text("Nada")];
+        child: Column(
+          children: <Widget>[
+            StreamBuilder(
+              stream: stream,
+              builder: (context, snap) {
+                List<Widget> children = <Widget>[const Text("Nada")];
 
-            if (snap.hasData) {
-              Ambient data = Ambient.fromDbSnap(
-                  snap.data!.snapshot.value as Map<Object?, Object?>);
+                if (snap.hasData) {
+                  Ambient data = Ambient.fromDbSnap(
+                      snap.data!.snapshot.value as Map<Object?, Object?>);
 
-              children = <Widget>[
-                Text("Temperature: ${data.temperature}"),
-                Text("Humidity: ${data.humidity}"),
-                Text("Heat Index: ${data.heatIndex}"),
-                Text("Movement: ${data.movement}"),
-              ];
-            }
+                  children = <Widget>[
+                    Text("Temperature: ${data.temperature}"),
+                    Text("Humidity: ${data.humidity}"),
+                    Text("Heat Index: ${data.heatIndex}"),
+                    Text("Movement: ${data.movement}"),
+                  ];
+                }
 
-            return Column(children: children);
-          },
+                return Column(children: children);
+              },
+            ),
+            CustomPaint(painter: ShaderPainter(shader!, dt))
+          ],
         ),
       ),
     );
