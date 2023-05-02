@@ -22,7 +22,7 @@ const channel = AndroidNotificationChannel(
   importance: Importance.high,
 );
 
-//const group = AndroidNotificationChannelGroup("temp_monitor_group", "alerts");
+const group = AndroidNotificationChannelGroup("temp_monitor_group", "alerts");
 
 bool isFlutterLocalNotificationsInitialized = false;
 
@@ -68,36 +68,43 @@ void showFlutterNotification(RemoteMessage message) {
   //if (notification != null && android != null) {
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-  flutterLocalNotificationsPlugin
-      .getActiveNotifications()
-      .then((notifications) {
-    if (notifications.isNotEmpty) {
-      return;
-    }
-    flutterLocalNotificationsPlugin.show(
-      data.hashCode,
-      data["Title"],
-      null,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          channel.id,
-          channel.name,
-          channelDescription: channel.description,
-          //groupKey: channel.groupId,
-          //groupAlertBehavior: GroupAlertBehavior.children,
-          styleInformation: BigTextStyleInformation(
-            data["Body"],
-            htmlFormatBigText: true,
-            htmlFormatContent: true,
+  flutterLocalNotificationsPlugin.getActiveNotifications().then(
+    (notifications) {
+      if (notifications.length >= 2) {
+        return;
+      }
+
+      if (notifications.isNotEmpty &&
+          data.containsKey(notifications.first.tag)) {
+        return;
+      }
+
+      flutterLocalNotificationsPlugin.show(
+        data.hashCode,
+        data["Title"],
+        null,
+        NotificationDetails(
+          android: AndroidNotificationDetails(
+            channel.id,
+            channel.name,
+            tag: data.containsKey("Temp") ? "Temp" : "Move",
+            channelDescription: channel.description,
+            channelAction: AndroidNotificationChannelAction.update,
+            groupAlertBehavior: GroupAlertBehavior.children,
+            styleInformation: BigTextStyleInformation(
+              data["Body"],
+              htmlFormatBigText: true,
+              htmlFormatContent: true,
+            ),
+            icon: 'launch_background',
+            color: Colors.redAccent,
+            colorized: true,
+            onlyAlertOnce: true,
           ),
-          icon: 'launch_background',
-          color: Colors.redAccent,
-          colorized: true,
-          onlyAlertOnce: true,
         ),
-      ),
-    );
-  });
+      );
+    },
+  );
 
   //}
 }
