@@ -13,8 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:temp_monitor/src/shader_painter.dart';
 import './src/ambient.dart';
 
-//const serverHost = "10.9.9.115:8080";
-const serverHost = "push-alerts.onrender.com";
+const serverHost = "192.168.1.168:8080";
+//const serverHost = "push-alerts.onrender.com";
 
 const channel = AndroidNotificationChannel(
   'temp_monitor', // id
@@ -162,7 +162,7 @@ class _MonitorPageState extends State<MonitorPage> {
       (token) {
         http
             .post(
-              Uri.https(
+              Uri.http(
                 serverHost,
                 '/registerToken',
                 {'token': token},
@@ -182,11 +182,9 @@ class _MonitorPageState extends State<MonitorPage> {
     super.dispose();
   }
 
-  void loadShader() {
-    final program = FragmentProgram.fromAsset("shaders/test.frag")
-        .then((value) => shader = value.fragmentShader());
-
-    setState(() {});
+  void loadShader() async {
+    var program = await FragmentProgram.fromAsset('shaders/test.frag');
+    shader = program.fragmentShader();
 
     _ticker = Ticker(_tick);
     _ticker.start();
@@ -232,7 +230,12 @@ class _MonitorPageState extends State<MonitorPage> {
                 return Column(children: children);
               },
             ),
-            CustomPaint(painter: ShaderPainter(shader!, dt))
+            shader != null
+                ? CustomPaint(
+                    painter: ShaderPainter(shader!, dt),
+                    size: const Size(400, 400),
+                  )
+                : const Text("XD")
           ],
         ),
       ),

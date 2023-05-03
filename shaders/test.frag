@@ -14,7 +14,11 @@ void main() {
     vec3 col;
     
     float s = 0.5*sin(time) + 0.5;
-    col += GLOW(0.1, abs(length(uv) - 0.25 * s), 0.9);
+    col = mix(
+        col,
+        vec3(1, 1, 2),
+        GLOW(0.005, abs(length(uv) - 0.25 * s), 0.9)
+    );
 
     fragColor = vec4(col, 1.0);
 
