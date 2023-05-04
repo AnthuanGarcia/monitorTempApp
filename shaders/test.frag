@@ -2,6 +2,7 @@
 
 uniform vec2 resolution;
 uniform float time;
+uniform vec2 position;
 
 out vec4 fragColor;
 
@@ -48,10 +49,10 @@ void main() {
 
     vec4 col = vec4(0);
     
-    float s = smoothNoise(uv + time) * 0.05;
+    float s = smoothNoise(uv + time) * 0.025;
     float circle = length(uv - s) - 0.2;
     
-    vec2 orbit = vec2(cos(time) / sqrt(5.0), sin(time)) * 0.2;
+    vec2 orbit = vec2(cos(time) * 0.4472135 /* 1 / sqrt(5.0) */, sin(time)) * 0.15;
     orbit *= rot2D(-radians(45.0));
     float planet = length(uv - orbit) - 0.025;
 
