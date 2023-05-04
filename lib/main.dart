@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:temp_monitor/src/shader_painter.dart';
+import 'package:flutter_shaders/flutter_shaders.dart';
 import './src/ambient.dart';
 
 const serverHost = "192.168.1.168:8080";
@@ -140,7 +141,7 @@ class _MonitorPageState extends State<MonitorPage> {
   DatabaseReference db = FirebaseDatabase.instance.ref();
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-  FragmentShader? shader;
+  //FragmentShader? shader;
   Duration previous = Duration.zero;
   late final Ticker _ticker;
   double dt = 0.0;
@@ -151,7 +152,8 @@ class _MonitorPageState extends State<MonitorPage> {
 
     //FirebaseMessaging.onMessage.listen(showFlutterNotification);
 
-    loadShader();
+    _ticker = Ticker(_tick);
+    _ticker.start();
 
     final token = prefs.getString("user_token");
     if (token != null) return;
@@ -182,14 +184,6 @@ class _MonitorPageState extends State<MonitorPage> {
     super.dispose();
   }
 
-  void loadShader() async {
-    var program = await FragmentProgram.fromAsset('shaders/test.frag');
-    shader = program.fragmentShader();
-
-    _ticker = Ticker(_tick);
-    _ticker.start();
-  }
-
   void _tick(Duration timestp) {
     final delta = timestp - previous;
     previous = timestp;
@@ -204,40 +198,56 @@ class _MonitorPageState extends State<MonitorPage> {
     Stream<DatabaseEvent> stream = db.onValue;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          children: <Widget>[
-            StreamBuilder(
-              stream: stream,
-              builder: (context, snap) {
-                List<Widget> children = <Widget>[const Text("Nada")];
+      body: Stack(
+        alignment: AlignmentDirectional.topCenter,
+        children: <Widget>[
+          StreamBuilder(
+            stream: stream,
+            builder: (context, snap) {
+              List<Widget> children = <Widget>[const Text("Nada")];
 
-                if (snap.hasData) {
-                  Ambient data = Ambient.fromDbSnap(
-                      snap.data!.snapshot.value as Map<Object?, Object?>);
+              if (snap.hasData) {
+                Ambient data = Ambient.fromDbSnap(
+                    snap.data!.snapshot.value as Map<Object?, Object?>);
 
-                  children = <Widget>[
-                    Text("Temperature: ${data.temperature}"),
-                    Text("Humidity: ${data.humidity}"),
-                    Text("Heat Index: ${data.heatIndex}"),
-                    Text("Movement: ${data.movement}"),
-                  ];
-                }
+                children = <Widget>[
+                  Text(
+                    "Temperature: ${data.temperature}",
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  Text(
+                    "Humidity: ${data.humidity}",
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  Text(
+                    "Heat Index: ${data.heatIndex}",
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  Text(
+                    "Movement: ${data.movement}",
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ];
+              }
 
-                return Column(children: children);
-              },
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: children,
+              );
+            },
+          ),
+          ShaderBuilder(
+            assetKey: "shaders/test.frag",
+            (ctx, shader, child) => CustomPaint(
+              size: MediaQuery.of(ctx).size,
+              painter: ShaderPainter(shader, dt),
             ),
-            shader != null
-                ? CustomPaint(
-                    painter: ShaderPainter(shader!, dt),
-                    size: const Size(400, 400),
-                  )
-                : const Text("XD")
-          ],
-        ),
+          )
+        ],
       ),
     );
   }

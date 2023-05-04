@@ -46,21 +46,21 @@ void main() {
 
     vec2 uv = (FlutterFragCoord() - 0.5 * resolution) / resolution.y;
 
-    vec3 col;
+    vec4 col = vec4(0);
     
-    float s = smoothNoise(uv + u_time) * 0.05;
-    float circle = length(uv - s) - 0.25;
+    float s = smoothNoise(uv + time) * 0.05;
+    float circle = length(uv - s) - 0.2;
     
-    vec2 orbit = vec2(cos(u_time) / sqrt(5.0), sin(u_time)) * 0.3;
+    vec2 orbit = vec2(cos(time) / sqrt(5.0), sin(time)) * 0.2;
     orbit *= rot2D(-radians(45.0));
-    float planet = length(uv - orbit) - 0.05;
+    float planet = length(uv - orbit) - 0.025;
 
     col = mix(
         col,
-        vec3(1, 1, 2),
+        vec4(1, 1, 2, 1),
         GLOW(0.0035, abs(opSmoothUnion(circle, planet, 0.25)), 0.9)
     );
 
-    fragColor = vec4(col, 1.0);
+    fragColor = col;
 
 }
