@@ -1,7 +1,8 @@
 #include <flutter/runtime_effect.glsl>
 
-uniform vec2 resolution;
+uniform vec3 resolution;
 uniform float time;
+uniform float radius;
 uniform vec2 position;
 
 out vec4 fragColor;
@@ -43,18 +44,27 @@ float opSmoothUnion( float d1, float d2, float k ) {
     return mix( d2, d1, h ) - k*h*(1.0-h); 
 }
 
+float opSmoothSubtraction( float d1, float d2, float k ) {
+    float h = clamp( 0.5 - 0.5*(d2+d1)/k, 0.0, 1.0 );
+    return mix( d2, -d1, h ) + k*h*(1.0-h);
+}
+
+// TODO: Lava lamp effect
 void main() {
 
-    vec2 uv = (FlutterFragCoord() - 0.5 * resolution) / resolution.y;
+    vec2 uv = (2.0*FlutterFragCoord() - resolution.xy) / resolution.y;
+    vec2 pos = 2.0*position - 1.0;
+
+    pos.x *= resolution.x / resolution.y;
 
     vec4 col = vec4(0);
     
-    float s = smoothNoise(uv + time) * 0.025;
-    float circle = length(uv - s) - 0.2;
+    float s = smoothNoise(uv + time) * 0.05;
+    float circle = length(uv - s) - radius;
     
-    vec2 orbit = vec2(cos(time) * 0.4472135 /* 1 / sqrt(5.0) */, sin(time)) * 0.15;
-    orbit *= rot2D(-radians(45.0));
-    float planet = length(uv - orbit) - 0.025;
+    //vec2 orbit = vec2(cos(time) * 0.4472135 /* 1 / sqrt(5.0) */, sin(time)) * 0.15;
+    //orbit *= rot2D(-radians(45.0));
+    float planet = length(uv - pos) - 0.025;
 
     col = mix(
         col,

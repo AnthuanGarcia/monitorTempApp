@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:shady/shady.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:temp_monitor/src/shader_painter.dart';
 import 'package:flutter_shaders/flutter_shaders.dart';
@@ -119,6 +120,8 @@ class MonitorTemp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Test',
+      debugShowCheckedModeBanner: false,
+      //showPerformanceOverlay: true,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -142,9 +145,21 @@ class _MonitorPageState extends State<MonitorPage> {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
   //FragmentShader? shader;
-  Duration previous = Duration.zero;
-  late final Ticker _ticker;
-  double dt = 0.0;
+  //Duration previous = Duration.zero;
+  //late final Ticker _ticker;
+  //double dt = 0.0;
+
+  final glowRing = Shady(assetName: "shaders/test.frag", uniforms: [
+    UniformVec3(key: 'resolution', transformer: UniformVec3.resolution),
+    UniformFloat(key: 'time', transformer: UniformFloat.secondsPassed),
+    UniformFloat(key: 'radius', initialValue: 0.35),
+    UniformVec2(key: 'position'),
+  ]);
+
+  final Torus = Shady(assetName: "shaders/toru.frag", uniforms: [
+    UniformVec3(key: 'resolution', transformer: UniformVec3.resolution),
+    UniformFloat(key: 'time', transformer: UniformFloat.secondsPassed),
+  ]);
 
   @override
   void initState() {
@@ -152,8 +167,8 @@ class _MonitorPageState extends State<MonitorPage> {
 
     //FirebaseMessaging.onMessage.listen(showFlutterNotification);
 
-    _ticker = Ticker(_tick);
-    _ticker.start();
+    //_ticker = Ticker(_tick);
+    //_ticker.start();
 
     final token = prefs.getString("user_token");
     if (token != null) return;
@@ -178,30 +193,13 @@ class _MonitorPageState extends State<MonitorPage> {
   }
 
   @override
-  void dispose() {
-    _ticker.stop();
-    _ticker.dispose();
-    super.dispose();
-  }
-
-  void _tick(Duration timestp) {
-    final delta = timestp - previous;
-    previous = timestp;
-
-    setState(() {
-      dt += delta.inMicroseconds / Duration.microsecondsPerSecond;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     Stream<DatabaseEvent> stream = db.onValue;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
+      extendBody: true,
+      extendBodyBehindAppBar: true,
       body: Stack(
         alignment: AlignmentDirectional.topCenter,
         children: <Widget>[
@@ -240,11 +238,17 @@ class _MonitorPageState extends State<MonitorPage> {
               );
             },
           ),
-          ShaderBuilder(
+          /*ShaderBuilder(
             assetKey: "shaders/test.frag",
             (ctx, shader, child) => CustomPaint(
               size: MediaQuery.of(ctx).size,
               painter: ShaderPainter(shader, dt),
+            ),
+          )*/
+          SizedBox.expand(
+            child: ShadyInteractive(
+              glowRing,
+              uniformVec2Key: 'position',
             ),
           )
         ],
