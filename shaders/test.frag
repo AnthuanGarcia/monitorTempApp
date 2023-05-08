@@ -69,7 +69,7 @@ void main() {
     col = mix(
         col,
         vec4(1, 1, 2, 1),
-        GLOW(0.0035, abs(opSmoothUnion(circle, planet, 0.25)), 0.9)
+        GLOW(0.0035, abs(opSmoothUnion(circle, planet, 0.25)), 1.1)
     );
 
     fragColor = col;

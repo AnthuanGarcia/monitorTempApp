@@ -156,11 +156,6 @@ class _MonitorPageState extends State<MonitorPage> {
     UniformVec2(key: 'position'),
   ]);
 
-  final Torus = Shady(assetName: "shaders/toru.frag", uniforms: [
-    UniformVec3(key: 'resolution', transformer: UniformVec3.resolution),
-    UniformFloat(key: 'time', transformer: UniformFloat.secondsPassed),
-  ]);
-
   @override
   void initState() {
     super.initState();
