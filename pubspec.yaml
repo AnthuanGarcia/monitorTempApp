@@ -100,3 +100,4 @@ flutter:
   shaders:
     - shaders/test.frag
     - shaders/toru.frag
+    - shaders/heightCols.frag

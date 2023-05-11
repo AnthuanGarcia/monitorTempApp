@@ -149,11 +149,16 @@ class _MonitorPageState extends State<MonitorPage> {
   //late final Ticker _ticker;
   //double dt = 0.0;
 
-  final glowRing = Shady(assetName: "shaders/test.frag", uniforms: [
+  /*final glowRing = Shady(assetName: "shaders/test.frag", uniforms: [
     UniformVec3(key: 'resolution', transformer: UniformVec3.resolution),
     UniformFloat(key: 'time', transformer: UniformFloat.secondsPassed),
     UniformFloat(key: 'radius', initialValue: 0.35),
     UniformVec2(key: 'position'),
+  ]);*/
+
+  final grad = Shady(assetName: 'shaders/heightCols.frag', uniforms: [
+    UniformVec3(key: 'resolution', transformer: UniformVec3.resolution),
+    UniformFloat(key: 'time', transformer: UniformFloat.secondsPassed),
   ]);
 
   @override
@@ -192,60 +197,37 @@ class _MonitorPageState extends State<MonitorPage> {
     Stream<DatabaseEvent> stream = db.onValue;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
       extendBody: true,
       extendBodyBehindAppBar: true,
       body: Stack(
         alignment: AlignmentDirectional.topCenter,
         children: <Widget>[
+          SizedBox.expand(
+            child: ShadyCanvas(grad),
+          ),
           StreamBuilder(
             stream: stream,
             builder: (context, snap) {
-              List<Widget> children = <Widget>[const Text("Nada")];
-
-              if (snap.hasData) {
-                Ambient data = Ambient.fromDbSnap(
-                    snap.data!.snapshot.value as Map<Object?, Object?>);
-
-                children = <Widget>[
-                  Text(
-                    "Temperature: ${data.temperature}",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  Text(
-                    "Humidity: ${data.humidity}",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  Text(
-                    "Heat Index: ${data.heatIndex}",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  Text(
-                    "Movement: ${data.movement}",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ];
+              if (!snap.hasData) {
+                return const Text("Cargando...");
               }
 
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: children,
+              Ambient ambient = Ambient.fromDbSnap(
+                  snap.data!.snapshot.value as Map<Object?, Object?>);
+
+              return Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text("${ambient.temperature}"),
+                    Text("${ambient.humidity}"),
+                    Text("${ambient.heatIndex}"),
+                  ],
+                ),
               );
             },
           ),
-          /*ShaderBuilder(
-            assetKey: "shaders/test.frag",
-            (ctx, shader, child) => CustomPaint(
-              size: MediaQuery.of(ctx).size,
-              painter: ShaderPainter(shader, dt),
-            ),
-          )*/
-          SizedBox.expand(
-            child: ShadyInteractive(
-              glowRing,
-              uniformVec2Key: 'position',
-            ),
-          )
         ],
       ),
     );
