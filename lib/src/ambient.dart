@@ -5,10 +5,10 @@ class Ambient {
   final num heatIndex;
 
   const Ambient(
-      {required this.movement,
-      required this.temperature,
-      required this.humidity,
-      required this.heatIndex});
+      {this.movement = 0,
+      this.temperature = 0,
+      this.humidity = 0,
+      this.heatIndex = 0});
 
   factory Ambient.fromJson(Map<String, dynamic> json) => Ambient(
       movement: json["move"] as num,

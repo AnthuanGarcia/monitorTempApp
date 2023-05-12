@@ -159,6 +159,7 @@ class _MonitorPageState extends State<MonitorPage> {
   //final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   DatabaseReference db = FirebaseDatabase.instance.ref();
   FirebaseMessaging messaging = FirebaseMessaging.instance;
+  late Ambient? prevAmbient, ambient;
 
   //FragmentShader? shader;
   //Duration previous = Duration.zero;
@@ -230,56 +231,160 @@ class _MonitorPageState extends State<MonitorPage> {
                   return const Text("Cargando...");
                 }
 
-                Ambient ambient = Ambient.fromDbSnap(
+                prevAmbient ??= const Ambient();
+                prevAmbient = ambient;
+
+                ambient = Ambient.fromDbSnap(
                     snap.data!.snapshot.value as Map<Object?, Object?>);
 
                 return Center(
-                  child: Row(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      //padding: const EdgeInsets.only(bottoqm: 100),
+                      ambient!.movement == 0
+                          ? const Text(
+                              "No hay lecturas de movimiento",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w300,
+                              ),
+                            )
+                          : Container(
+                              foregroundDecoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text("Hoal"),
+                            ),
                       Container(
-                        margin: const EdgeInsets.all(20.0),
-                        child: Countup(
-                          begin: 0,
-                          end: ambient.humidity.toDouble(),
-                          duration: const Duration(seconds: 2),
-                          separator: ".",
-                          precision: 2,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w300,
-                          ),
+                        margin: const EdgeInsets.fromLTRB(20.0, 20, 20, 20),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Countup(
+                                  begin: prevAmbient!.temperature.toDouble(),
+                                  end: ambient!.temperature.toDouble(),
+                                  duration: const Duration(seconds: 2),
+                                  separator: ".",
+                                  style: const TextStyle(
+                                    fontSize: 72,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                                const Text(
+                                  "°C",
+                                  style: TextStyle(
+                                    fontSize: 72,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                )
+                              ],
+                            ),
+                            const Text(
+                              "Temperatura",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w300,
+                              ),
+                            )
+                          ],
                         ),
                       ),
-                      Container(
-                        margin: const EdgeInsets.all(20.0),
-                        child: Countup(
-                          begin: 0,
-                          end: ambient.temperature.toDouble(),
-                          duration: const Duration(seconds: 2),
-                          separator: ".",
-                          style: const TextStyle(
-                            fontSize: 72,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w300,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.all(20.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Countup(
+                                      begin: prevAmbient!.humidity.toDouble(),
+                                      end: ambient!.humidity.toDouble(),
+                                      duration: const Duration(seconds: 2),
+                                      style: const TextStyle(
+                                        fontSize: 48,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                    const Text(
+                                      "%",
+                                      style: TextStyle(
+                                        fontSize: 48,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w300,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                const Text(
+                                  "Humedad",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
-                        ),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.all(20.0),
-                        child: Countup(
-                          begin: 0,
-                          end: ambient.heatIndex.toDouble(),
-                          duration: const Duration(seconds: 2),
-                          separator: ".",
-                          precision: 2,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w300,
+                          Container(
+                            margin: const EdgeInsets.all(20.0),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Countup(
+                                      begin: prevAmbient!.temperature
+                                          .toDouble()
+                                          .ceilToDouble(),
+                                      end: ambient!.heatIndex
+                                          .toDouble()
+                                          .ceilToDouble(),
+                                      duration: const Duration(seconds: 2),
+                                      separator: ".",
+                                      style: const TextStyle(
+                                        fontSize: 48,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                    const Text(
+                                      "°C",
+                                      style: TextStyle(
+                                        fontSize: 48,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w300,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                const Text(
+                                  "Indice de Calor",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
