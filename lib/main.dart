@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:ui';
 import 'dart:convert';
 
+import 'package:countup/countup.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_core/firebase_core.dart';
@@ -34,6 +36,20 @@ late SharedPreferences prefs;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.transparent,
+    ),
+  );
+
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.manual,
+    overlays: [SystemUiOverlay.top],
+  );
+
   await Firebase.initializeApp();
   await FirebaseMessaging.instance.setAutoInitEnabled(true);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -197,38 +213,81 @@ class _MonitorPageState extends State<MonitorPage> {
     Stream<DatabaseEvent> stream = db.onValue;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.black,
       extendBody: true,
       extendBodyBehindAppBar: true,
-      body: Stack(
-        alignment: AlignmentDirectional.topCenter,
-        children: <Widget>[
-          SizedBox.expand(
-            child: ShadyCanvas(grad),
-          ),
-          StreamBuilder(
-            stream: stream,
-            builder: (context, snap) {
-              if (!snap.hasData) {
-                return const Text("Cargando...");
-              }
+      body: SizedBox.expand(
+        child: Stack(
+          alignment: AlignmentDirectional.topCenter,
+          children: <Widget>[
+            SizedBox.expand(
+              child: ShadyCanvas(grad),
+            ),
+            StreamBuilder(
+              stream: stream,
+              builder: (context, snap) {
+                if (!snap.hasData) {
+                  return const Text("Cargando...");
+                }
 
-              Ambient ambient = Ambient.fromDbSnap(
-                  snap.data!.snapshot.value as Map<Object?, Object?>);
+                Ambient ambient = Ambient.fromDbSnap(
+                    snap.data!.snapshot.value as Map<Object?, Object?>);
 
-              return Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("${ambient.temperature}"),
-                    Text("${ambient.humidity}"),
-                    Text("${ambient.heatIndex}"),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
+                return Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.all(20.0),
+                        child: Countup(
+                          begin: 0,
+                          end: ambient.humidity.toDouble(),
+                          duration: const Duration(seconds: 2),
+                          separator: ".",
+                          precision: 2,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.all(20.0),
+                        child: Countup(
+                          begin: 0,
+                          end: ambient.temperature.toDouble(),
+                          duration: const Duration(seconds: 2),
+                          separator: ".",
+                          style: const TextStyle(
+                            fontSize: 72,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.all(20.0),
+                        child: Countup(
+                          begin: 0,
+                          end: ambient.heatIndex.toDouble(),
+                          duration: const Duration(seconds: 2),
+                          separator: ".",
+                          precision: 2,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
