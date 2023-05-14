@@ -18,13 +18,21 @@ void main(){
 	
 	vec3 col;
 	
-	for(float i=1.;i<=4.;i++){
-		
-		uv.x+=.6/i*cos(uv.y*i*3.+time*.25);
-		uv.y+=.2/i*sin(uv.x*i*3.+time*.25);
-		uv*=rot2D(time*.1);
-		
-	}
+	uv.x+=.6*cos(uv.y*3.+time*.25);
+	uv.y+=.2*sin(uv.x*3.+time*.25);
+	uv*=rot2D(time*.1);
+	
+	uv.x+=.6/2.*cos(uv.y*2.*3.+time*.25);
+	uv.y+=.2/2.*sin(uv.x*2.*3.+time*.25);
+	uv*=rot2D(time*.1);
+	
+	uv.x+=.6/3.*cos(uv.y*3.*3.+time*.25);
+	uv.y+=.2/3.*sin(uv.x*3.*3.+time*.25);
+	uv*=rot2D(time*.1);
+	
+	uv.x+=.6/4.*cos(uv.y*4.*3.+time*.25);
+	uv.y+=.2/4.*sin(uv.x*4.*3.+time*.25);
+	uv*=rot2D(time*.1);
 	
 	float t=time*.25;
 	

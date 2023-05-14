@@ -159,7 +159,7 @@ class _MonitorPageState extends State<MonitorPage> {
   //final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   DatabaseReference db = FirebaseDatabase.instance.ref();
   FirebaseMessaging messaging = FirebaseMessaging.instance;
-  late Ambient? prevAmbient, ambient;
+  Ambient? prevAmbient, ambient;
 
   //FragmentShader? shader;
   //Duration previous = Duration.zero;
@@ -173,7 +173,7 @@ class _MonitorPageState extends State<MonitorPage> {
     UniformVec2(key: 'position'),
   ]);*/
 
-  final grad = Shady(assetName: 'shaders/heightCols.frag', uniforms: [
+  final grad = Shady(assetName: 'assets/shaders/heightCols.frag', uniforms: [
     UniformVec3(key: 'resolution', transformer: UniformVec3.resolution),
     UniformFloat(key: 'time', transformer: UniformFloat.secondsPassed),
   ]);
@@ -231,77 +231,63 @@ class _MonitorPageState extends State<MonitorPage> {
                   return const Text("Cargando...");
                 }
 
-                prevAmbient ??= const Ambient();
+                //prevAmbient ??= const Ambient();
+                ambient ??= const Ambient();
                 prevAmbient = ambient;
 
                 ambient = Ambient.fromDbSnap(
                     snap.data!.snapshot.value as Map<Object?, Object?>);
 
                 return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Stack(
+                    alignment: Alignment.topCenter,
                     children: [
-                      //padding: const EdgeInsets.only(bottoqm: 100),
-                      ambient!.movement == 0
-                          ? const Text(
-                              "No hay lecturas de movimiento",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w300,
-                              ),
-                            )
-                          : Container(
-                              foregroundDecoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Text("Hoal"),
-                            ),
                       Container(
-                        margin: const EdgeInsets.fromLTRB(20.0, 20, 20, 20),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Countup(
-                                  begin: prevAmbient!.temperature.toDouble(),
-                                  end: ambient!.temperature.toDouble(),
-                                  duration: const Duration(seconds: 2),
-                                  separator: ".",
-                                  style: const TextStyle(
-                                    fontSize: 72,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w400,
+                        margin: const EdgeInsets.only(top: 160),
+                        child: ambient!.movement == 0
+                            ? const Text(
+                                "No hay lecturas de movimiento",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              )
+                            : DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(15),
+                                  child: Wrap(
+                                    children: const [
+                                      Image(
+                                        image: AssetImage(
+                                            'assets/imgs/warning.png'),
+                                        fit: BoxFit.fitHeight,
+                                        height: 20,
+                                        width: 20,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        "¡Movimiento detectado!",
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w300,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const Text(
-                                  "°C",
-                                  style: TextStyle(
-                                    fontSize: 72,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                                )
-                              ],
-                            ),
-                            const Text(
-                              "Temperatura",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w300,
                               ),
-                            )
-                          ],
-                        ),
                       ),
-                      Row(
+                      Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
-                            margin: const EdgeInsets.all(20.0),
+                            margin: const EdgeInsets.fromLTRB(20.0, 20, 20, 20),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -309,56 +295,13 @@ class _MonitorPageState extends State<MonitorPage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Countup(
-                                      begin: prevAmbient!.humidity.toDouble(),
-                                      end: ambient!.humidity.toDouble(),
-                                      duration: const Duration(seconds: 2),
-                                      style: const TextStyle(
-                                        fontSize: 48,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                    const Text(
-                                      "%",
-                                      style: TextStyle(
-                                        fontSize: 48,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w300,
-                                      ),
-                                    )
-                                  ],
-                                ),
-                                const Text(
-                                  "Humedad",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                                )
-                              ],
-                            ),
-                          ),
-                          Container(
-                            margin: const EdgeInsets.all(20.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Countup(
-                                      begin: prevAmbient!.temperature
-                                          .toDouble()
-                                          .ceilToDouble(),
-                                      end: ambient!.heatIndex
-                                          .toDouble()
-                                          .ceilToDouble(),
-                                      duration: const Duration(seconds: 2),
+                                      begin:
+                                          prevAmbient!.temperature.toDouble(),
+                                      end: ambient!.temperature.toDouble(),
+                                      duration: const Duration(seconds: 1),
                                       separator: ".",
                                       style: const TextStyle(
-                                        fontSize: 48,
+                                        fontSize: 72,
                                         color: Colors.white,
                                         fontWeight: FontWeight.w400,
                                       ),
@@ -366,7 +309,7 @@ class _MonitorPageState extends State<MonitorPage> {
                                     const Text(
                                       "°C",
                                       style: TextStyle(
-                                        fontSize: 48,
+                                        fontSize: 72,
                                         color: Colors.white,
                                         fontWeight: FontWeight.w300,
                                       ),
@@ -374,15 +317,107 @@ class _MonitorPageState extends State<MonitorPage> {
                                   ],
                                 ),
                                 const Text(
-                                  "Indice de Calor",
+                                  "Temperatura",
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 16,
                                     color: Colors.white,
                                     fontWeight: FontWeight.w300,
                                   ),
                                 )
                               ],
                             ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                margin: const EdgeInsets.all(20.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Countup(
+                                          begin:
+                                              prevAmbient!.humidity.toDouble(),
+                                          end: ambient!.humidity.toDouble(),
+                                          duration: const Duration(seconds: 1),
+                                          style: const TextStyle(
+                                            fontSize: 48,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                        ),
+                                        const Text(
+                                          "%",
+                                          style: TextStyle(
+                                            fontSize: 48,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w300,
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                    const Text(
+                                      "Humedad",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w300,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                margin: const EdgeInsets.all(20.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Countup(
+                                          begin: prevAmbient!.heatIndex
+                                              .toDouble()
+                                              .ceilToDouble(),
+                                          end: ambient!.heatIndex
+                                              .toDouble()
+                                              .ceilToDouble(),
+                                          duration: const Duration(seconds: 1),
+                                          separator: ".",
+                                          style: const TextStyle(
+                                            fontSize: 48,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                        ),
+                                        const Text(
+                                          "°C",
+                                          style: TextStyle(
+                                            fontSize: 48,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w300,
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                    const Text(
+                                      "Indice de Calor",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w300,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
