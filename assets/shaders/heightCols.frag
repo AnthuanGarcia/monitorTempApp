@@ -2,6 +2,7 @@
 
 uniform vec3 resolution;
 uniform float time;
+uniform float temperature;
 
 out vec4 fragColor;
 
@@ -42,15 +43,27 @@ void main(){
 		sin(sin(uv.x)+cos(uv.y)+t)
 	)+.5;
 	
-	col=mix(
+	col = mix(
 		mix(
 			//vec3(1.0, 1.0, 1.0),
 			//vec3(0.0, 0.1961, 0.9882),
-			vec3(.6941,.8353,1.),
-			vec3(.3961,.5059,.9922),
+			mix(
+				vec3(.6941,.8353,1.),
+				vec3(1.0, 0.6941, 0.6941),
+				temperature
+			),
+			mix(
+				vec3(.3961,.5059,.9922),
+				vec3(0.9922, 0.3961, 0.3961),
+				temperature
+			),
 			a.x
 		),
-		vec3(.1333,.5804,1.),
+		mix(
+			vec3(.1333,.5804,1.),
+			vec3(1.0, 0.1333, 0.1333),
+			temperature
+		),
 		a.z
 	);
 	

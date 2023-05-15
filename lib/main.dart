@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'dart:ui';
-import 'dart:convert';
 
 import 'package:countup/countup.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/scheduler.dart';
+//import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
@@ -13,12 +12,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:shady/shady.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:temp_monitor/src/shader_painter.dart';
-import 'package:flutter_shaders/flutter_shaders.dart';
+//import 'package:temp_monitor/src/shader_painter.dart';
+//import 'package:flutter_shaders/flutter_shaders.dart';
 import './src/ambient.dart';
 
-const serverHost = "192.168.1.168:8080";
-//const serverHost = "push-alerts.onrender.com";
+//const serverHost = "192.168.1.168:8080";
+const serverHost = "push-alerts.onrender.com";
 
 const channel = AndroidNotificationChannel(
   'temp_monitor', // id
@@ -28,7 +27,7 @@ const channel = AndroidNotificationChannel(
   importance: Importance.high,
 );
 
-const group = AndroidNotificationChannelGroup("temp_monitor_group", "alerts");
+const temperatureAlert = 19;
 
 bool isFlutterLocalNotificationsInitialized = false;
 
@@ -155,7 +154,8 @@ class MonitorPage extends StatefulWidget {
   State<MonitorPage> createState() => _MonitorPageState();
 }
 
-class _MonitorPageState extends State<MonitorPage> {
+class _MonitorPageState extends State<MonitorPage>
+    with SingleTickerProviderStateMixin {
   //final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   DatabaseReference db = FirebaseDatabase.instance.ref();
   FirebaseMessaging messaging = FirebaseMessaging.instance;
@@ -176,7 +176,13 @@ class _MonitorPageState extends State<MonitorPage> {
   final grad = Shady(assetName: 'assets/shaders/heightCols.frag', uniforms: [
     UniformVec3(key: 'resolution', transformer: UniformVec3.resolution),
     UniformFloat(key: 'time', transformer: UniformFloat.secondsPassed),
+    UniformFloat(key: 'temperature'),
   ]);
+
+  AnimationController? _controller;
+  Animation<double>? _changeBack;
+
+  bool onlyOne = false;
 
   @override
   void initState() {
@@ -187,6 +193,20 @@ class _MonitorPageState extends State<MonitorPage> {
     //_ticker = Ticker(_tick);
     //_ticker.start();
 
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+
+    _changeBack = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_controller!);
+
+    _changeBack!.addListener(() {
+      grad.setUniform<double>('temperature', _changeBack!.value);
+    });
+
     final token = prefs.getString("user_token");
     if (token != null) return;
 
@@ -196,7 +216,7 @@ class _MonitorPageState extends State<MonitorPage> {
       (token) {
         http
             .post(
-              Uri.http(
+              Uri.https(
                 serverHost,
                 '/registerToken',
                 {'token': token},
@@ -207,6 +227,13 @@ class _MonitorPageState extends State<MonitorPage> {
         prefs.setString("user_token", token!);
       },
     );
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _controller!.dispose();
   }
 
   @override
@@ -238,13 +265,21 @@ class _MonitorPageState extends State<MonitorPage> {
                 ambient = Ambient.fromDbSnap(
                     snap.data!.snapshot.value as Map<Object?, Object?>);
 
+                if (ambient!.temperature.toInt() > temperatureAlert) {
+                  _controller!.forward();
+                } else {
+                  _controller!.reverse();
+                }
+
+                //if (ambient!.temperature.toInt() <= 19) _controller!.reverse();
+
                 return Center(
                   child: Stack(
                     alignment: Alignment.topCenter,
                     children: [
                       Container(
                         margin: const EdgeInsets.only(top: 160),
-                        child: ambient!.movement == 0
+                        child: ambient!.movement < 1
                             ? const Text(
                                 "No hay lecturas de movimiento",
                                 style: TextStyle(
@@ -260,8 +295,8 @@ class _MonitorPageState extends State<MonitorPage> {
                                 ),
                                 child: Container(
                                   padding: const EdgeInsets.all(15),
-                                  child: Wrap(
-                                    children: const [
+                                  child: const Wrap(
+                                    children: [
                                       Image(
                                         image: AssetImage(
                                             'assets/imgs/warning.png'),
@@ -298,8 +333,7 @@ class _MonitorPageState extends State<MonitorPage> {
                                       begin:
                                           prevAmbient!.temperature.toDouble(),
                                       end: ambient!.temperature.toDouble(),
-                                      duration: const Duration(seconds: 1),
-                                      separator: ".",
+                                      duration: const Duration(seconds: 2),
                                       style: const TextStyle(
                                         fontSize: 72,
                                         color: Colors.white,
@@ -343,7 +377,7 @@ class _MonitorPageState extends State<MonitorPage> {
                                           begin:
                                               prevAmbient!.humidity.toDouble(),
                                           end: ambient!.humidity.toDouble(),
-                                          duration: const Duration(seconds: 1),
+                                          duration: const Duration(seconds: 2),
                                           style: const TextStyle(
                                             fontSize: 48,
                                             color: Colors.white,
@@ -388,7 +422,7 @@ class _MonitorPageState extends State<MonitorPage> {
                                           end: ambient!.heatIndex
                                               .toDouble()
                                               .ceilToDouble(),
-                                          duration: const Duration(seconds: 1),
+                                          duration: const Duration(seconds: 2),
                                           separator: ".",
                                           style: const TextStyle(
                                             fontSize: 48,
