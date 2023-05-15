@@ -27,7 +27,7 @@ const channel = AndroidNotificationChannel(
   importance: Importance.high,
 );
 
-const temperatureAlert = 19;
+const temperatureAlert = 22;
 
 bool isFlutterLocalNotificationsInitialized = false;
 
@@ -295,8 +295,8 @@ class _MonitorPageState extends State<MonitorPage>
                                 ),
                                 child: Container(
                                   padding: const EdgeInsets.all(15),
-                                  child: const Wrap(
-                                    children: [
+                                  child: Wrap(
+                                    children: const [
                                       Image(
                                         image: AssetImage(
                                             'assets/imgs/warning.png'),
