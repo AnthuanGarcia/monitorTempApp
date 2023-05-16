@@ -51,6 +51,17 @@ void main() async {
 
   await Firebase.initializeApp();
   await FirebaseMessaging.instance.setAutoInitEnabled(true);
+
+  await FirebaseMessaging.instance.requestPermission(
+    alert: true,
+    announcement: false,
+    badge: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+    sound: true,
+  );
+
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   prefs = await SharedPreferences.getInstance();
   runApp(const MonitorTemp());
