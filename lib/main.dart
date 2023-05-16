@@ -24,7 +24,7 @@ const channel = AndroidNotificationChannel(
   'Temperature Monitor', // title
   //groupId: "ambient_alerts",
   description: 'Get temperature in real time', // description
-  importance: Importance.high,
+  importance: Importance.max,
 );
 
 const temperatureAlert = 22;
@@ -50,17 +50,6 @@ void main() async {
   );
 
   await Firebase.initializeApp();
-  await FirebaseMessaging.instance.setAutoInitEnabled(true);
-
-  await FirebaseMessaging.instance.requestPermission(
-    alert: true,
-    announcement: false,
-    badge: true,
-    carPlay: false,
-    criticalAlert: false,
-    provisional: false,
-    sound: true,
-  );
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   prefs = await SharedPreferences.getInstance();
@@ -222,6 +211,18 @@ class _MonitorPageState extends State<MonitorPage>
     if (token != null) return;
 
     print("No deberia llegar hasta aqui");
+
+    FirebaseMessaging.instance.setAutoInitEnabled(true);
+
+    FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
 
     messaging.getToken().then(
       (token) {
