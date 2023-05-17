@@ -50,6 +50,7 @@ void main() async {
   );
 
   await Firebase.initializeApp();
+  await FirebaseMessaging.instance.setAutoInitEnabled(true);
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   prefs = await SharedPreferences.getInstance();
@@ -71,6 +72,12 @@ Future<void> setupFlutterNotifications() async {
   }
 
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  /*
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.requestPermission();*/
 
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
@@ -182,8 +189,6 @@ class _MonitorPageState extends State<MonitorPage>
   AnimationController? _controller;
   Animation<double>? _changeBack;
 
-  bool onlyOne = false;
-
   @override
   void initState() {
     super.initState();
@@ -212,18 +217,6 @@ class _MonitorPageState extends State<MonitorPage>
 
     print("No deberia llegar hasta aqui");
 
-    FirebaseMessaging.instance.setAutoInitEnabled(true);
-
-    FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
-
     messaging.getToken().then(
       (token) {
         http
@@ -248,9 +241,40 @@ class _MonitorPageState extends State<MonitorPage>
     _controller!.dispose();
   }
 
+  bool _fetching = false;
+  bool _acceptedPermissions = false;
+
+  Future<void> requestPermissions() async {
+    setState(() {
+      _fetching = true;
+    });
+
+    final settings = await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      criticalAlert: true,
+      sound: true,
+    );
+
+    setState(() {
+      _fetching = false;
+      _acceptedPermissions =
+          settings.authorizationStatus == AuthorizationStatus.authorized;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     Stream<DatabaseEvent> stream = db.onValue;
+
+    if (_fetching) {
+      return const CircularProgressIndicator();
+    }
+
+    if (!_acceptedPermissions) {
+      requestPermissions();
+      return const Text("Acepta Los permisos");
+    }
 
     return Scaffold(
       backgroundColor: Colors.black,
