@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:countup/countup.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 //import 'package:flutter/scheduler.dart';
@@ -17,7 +18,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import './src/ambient.dart';
 
 //const serverHost = "192.168.1.168:8080";
-const serverHost = "push-alerts.onrender.com";
 
 const channel = AndroidNotificationChannel(
   'temp_monitor', // id
@@ -164,7 +164,8 @@ class MonitorPage extends StatefulWidget {
 class _MonitorPageState extends State<MonitorPage>
     with SingleTickerProviderStateMixin {
   //final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  DatabaseReference db = FirebaseDatabase.instance.ref();
+  DatabaseReference dbrt = FirebaseDatabase.instance.ref();
+  FirebaseFirestore db = FirebaseFirestore.instance;
   FirebaseMessaging messaging = FirebaseMessaging.instance;
   Ambient? prevAmbient, ambient;
 
@@ -219,17 +220,10 @@ class _MonitorPageState extends State<MonitorPage>
 
     messaging.getToken().then(
       (token) {
-        http
-            .post(
-              Uri.https(
-                serverHost,
-                '/registerToken',
-                {'token': token},
-              ),
-            )
-            .then((res) => print("${res.statusCode}, ${res.body}"));
-
-        prefs.setString("user_token", token!);
+        db.collection("tokens").add(<String, dynamic>{
+          "token": token!,
+          "created_at": DateTime.now().toIso8601String()
+        });
       },
     );
   }
@@ -265,7 +259,7 @@ class _MonitorPageState extends State<MonitorPage>
 
   @override
   Widget build(BuildContext context) {
-    Stream<DatabaseEvent> stream = db.onValue;
+    Stream<DatabaseEvent> stream = dbrt.onValue;
 
     if (_fetching) {
       return const CircularProgressIndicator();
