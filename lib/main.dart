@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:countup/countup.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 //import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -220,9 +221,11 @@ class _MonitorPageState extends State<MonitorPage>
 
     messaging.getToken().then(
       (token) {
-        db.collection("tokens").add(<String, dynamic>{
-          "token": token!,
-          "created_at": DateTime.now().toIso8601String()
+        FirebaseAuth.instance.signInAnonymously().then((value) {
+          db.collection("tokens").add(<String, dynamic>{
+            "token": token!,
+            "created_at": DateTime.now().toIso8601String()
+          });
         });
       },
     );
