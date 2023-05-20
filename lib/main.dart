@@ -226,6 +226,8 @@ class _MonitorPageState extends State<MonitorPage>
             "token": token!,
             "created_at": DateTime.now().toIso8601String()
           });
+
+          prefs.setString("user_token", token);
         });
       },
     );
