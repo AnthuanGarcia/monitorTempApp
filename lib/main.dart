@@ -289,7 +289,16 @@ class _MonitorPageState extends State<MonitorPage>
               stream: stream,
               builder: (context, snap) {
                 if (!snap.hasData) {
-                  return const Text("Cargando...");
+                  return const Center(
+                    child: Text(
+                      "Cargando...",
+                      style: TextStyle(
+                        fontSize: 48,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w200,
+                      ),
+                    ),
+                  );
                 }
 
                 //prevAmbient ??= const Ambient();
