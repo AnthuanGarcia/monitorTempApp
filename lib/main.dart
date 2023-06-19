@@ -2,20 +2,19 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:countup/countup.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 //import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:shady/shady.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:temp_monitor/pages/logsTempsPage.dart';
+import 'package:temp_monitor/pages/mainPage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 //import 'package:temp_monitor/src/shader_painter.dart';
 //import 'package:flutter_shaders/flutter_shaders.dart';
-import './src/ambient.dart';
 
 //const serverHost = "192.168.1.168:8080";
 
@@ -26,8 +25,6 @@ const channel = AndroidNotificationChannel(
   description: 'Get temperature in real time', // description
   importance: Importance.max,
 );
-
-const temperatureAlert = 22;
 
 bool isFlutterLocalNotificationsInitialized = false;
 
@@ -162,6 +159,111 @@ class MonitorPage extends StatefulWidget {
 }
 
 class _MonitorPageState extends State<MonitorPage>
+    with SingleTickerProviderStateMixin {
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  final PageController _controller = PageController();
+
+  final grad = Shady(assetName: 'assets/shaders/heightCols.frag', uniforms: [
+    UniformVec3(key: 'resolution', transformer: UniformVec3.resolution),
+    UniformFloat(key: 'time', transformer: UniformFloat.secondsPassed),
+    UniformFloat(key: 'temperature'),
+  ]);
+
+  AnimationController? _animationController;
+  Animation<double>? _changeBack;
+
+  int _selectedIndex = 0;
+
+  void setCol() {
+    _animationController!.forward();
+  }
+
+  void undoCol() {
+    _animationController!.reverse();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+
+    _changeBack = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_animationController!);
+
+    _changeBack!.addListener(() {
+      grad.setUniform<double>('temperature', _changeBack!.value);
+    });
+
+    final token = prefs.getString("user_token");
+    if (token != null) {
+      print("O_o\n$token");
+      return;
+    }
+
+    print("No deberia llegar hasta aqui");
+
+    messaging.getToken().then(
+      (token) {
+        FirebaseAuth.instance.signInAnonymously().then((value) {
+          FirebaseFirestore.instance.collection("tokens").add(<String, dynamic>{
+            "token": token!,
+            "created_at": DateTime.now().toIso8601String()
+          });
+
+          prefs.setString("user_token", token);
+        });
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _animationController!.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      resizeToAvoidBottomInset: false,
+      body: SizedBox.expand(
+        child: Stack(
+          alignment: AlignmentDirectional.topCenter,
+          children: <Widget>[
+            SizedBox.expand(
+              child: ShadyCanvas(grad),
+            ),
+            Center(
+              child: PageView(
+                scrollDirection: Axis.vertical,
+                controller: _controller,
+                children: [
+                  MainPage(changeBackCol: setCol, undoBackCol: undoCol),
+                  const LogsTemperature(),
+                ],
+                onPageChanged: (page) {
+                  setState(() => _selectedIndex = page);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/*class _MonitorPageState extends State<MonitorPage>
     with SingleTickerProviderStateMixin {
   //final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   DatabaseReference dbrt = FirebaseDatabase.instance.ref();
@@ -508,4 +610,4 @@ class _MonitorPageState extends State<MonitorPage>
       ),
     );
   }
-}
+}*/
