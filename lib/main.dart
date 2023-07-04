@@ -159,7 +159,7 @@ class MonitorPage extends StatefulWidget {
 }
 
 class _MonitorPageState extends State<MonitorPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
   final PageController _controller = PageController();
@@ -168,10 +168,11 @@ class _MonitorPageState extends State<MonitorPage>
     UniformVec3(key: 'resolution', transformer: UniformVec3.resolution),
     UniformFloat(key: 'time', transformer: UniformFloat.secondsPassed),
     UniformFloat(key: 'temperature'),
+    UniformFloat(key: 'histBack')
   ]);
 
-  AnimationController? _animationController;
-  Animation<double>? _changeBack;
+  AnimationController? _animationController, _animationControllerHist;
+  Animation<double>? _changeBack, _changeBackHist;
 
   int _selectedIndex = 0;
 
@@ -192,6 +193,11 @@ class _MonitorPageState extends State<MonitorPage>
       duration: const Duration(seconds: 2),
     );
 
+    _animationControllerHist = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+
     _changeBack = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -199,6 +205,15 @@ class _MonitorPageState extends State<MonitorPage>
 
     _changeBack!.addListener(() {
       grad.setUniform<double>('temperature', _changeBack!.value);
+    });
+
+    _changeBackHist = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_animationControllerHist!);
+
+    _changeBackHist!.addListener(() {
+      grad.setUniform<double>('histBack', _changeBackHist!.value);
     });
 
     final token = prefs.getString("user_token");
@@ -228,6 +243,7 @@ class _MonitorPageState extends State<MonitorPage>
     // TODO: implement dispose
     super.dispose();
     _animationController!.dispose();
+    _animationControllerHist!.dispose();
   }
 
   @override
@@ -252,7 +268,13 @@ class _MonitorPageState extends State<MonitorPage>
                   const LogsTemperature(),
                 ],
                 onPageChanged: (page) {
-                  setState(() => _selectedIndex = page);
+                  setState(() {
+                    if (page == 1) {
+                      _animationControllerHist!.forward();
+                    } else {
+                      _animationControllerHist!.reverse();
+                    }
+                  });
                 },
               ),
             ),

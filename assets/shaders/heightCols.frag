@@ -3,6 +3,7 @@
 uniform vec3 resolution;
 uniform float time;
 uniform float temperature;
+uniform float histBack;
 
 out vec4 fragColor;
 
@@ -48,21 +49,33 @@ void main(){
 			//vec3(1.0, 1.0, 1.0),
 			//vec3(0.0, 0.1961, 0.9882),
 			mix(
-				vec3(.6941,.8353,1.),
-				vec3(1.0, 0.6941, 0.6941),
-				temperature
+				mix(
+					vec3(.6941,.8353,1.),
+					vec3(1.0, 0.6941, 0.6941),
+					temperature
+				),
+				vec3(1, 0.4, 0),
+				histBack
 			),
 			mix(
-				vec3(.3961,.5059,.9922),
-				vec3(0.9922, 0.3961, 0.3961),
-				temperature
+				mix(
+					vec3(.3961,.5059,.9922),
+					vec3(0.9922, 0.3961, 0.3961),
+					temperature
+				),
+				vec3(1, 0, 0.7),
+				histBack
 			),
 			a.x
 		),
 		mix(
-			vec3(.1333,.5804,1.),
-			vec3(1.0, 0.1333, 0.1333),
-			temperature
+			mix(
+				vec3(.1333,.5804,1.),
+				vec3(1.0, 0.1333, 0.1333),
+				temperature
+			),
+			vec3(0.0, 0.3176, 1.0),
+			histBack
 		),
 		a.z
 	);

@@ -14,16 +14,8 @@ class LogsTemperature extends StatefulWidget {
 class _LogsTemperatureState extends State<LogsTemperature> {
   FirebaseFirestore db = FirebaseFirestore.instance;
 
-  Widget leftTitles(double value, TitleMeta meta) {
-    const style = TextStyle(fontWeight: FontWeight.bold, color: Colors.white);
-    String text = value.toInt().toString();
-    return Text(text, style: style);
-  }
-
-  Widget bottomTitles(double value, TitleMeta meta) {
-    const style = TextStyle(fontWeight: FontWeight.bold, color: Colors.white);
+  String timeString12hrs(int hour) {
     String amPm = "AM";
-    int hour = value.toInt();
 
     if (hour >= 12) {
       amPm = "PM";
@@ -35,9 +27,22 @@ class _LogsTemperatureState extends State<LogsTemperature> {
       hour += 12;
     }
 
+    return hour.toString() + amPm;
+  }
+
+  Widget leftTitles(double value, TitleMeta meta) {
+    const style = TextStyle(fontWeight: FontWeight.bold, color: Colors.white);
+    String text = value.toInt().toString();
+    return Text(text, style: style);
+  }
+
+  Widget bottomTitles(double value, TitleMeta meta) {
+    const style = TextStyle(fontWeight: FontWeight.bold, color: Colors.white);
+    int hour = value.toInt();
+
     return Padding(
       padding: const EdgeInsets.only(top: 5),
-      child: Text(hour.toString() + amPm, style: style),
+      child: Text(timeString12hrs(hour), style: style),
     );
   }
 
@@ -57,8 +62,11 @@ class _LogsTemperatureState extends State<LogsTemperature> {
 
         final data = snapshot.data!.data();
         final temps = (data!["Temperatures"] as List)
-            .map((val) => val as Map<String, dynamic>)
+            .map((val) => val == 0
+                ? {"avg_temperature": 0.0, "adj_temperature": 0.0}
+                : val as Map<String, dynamic>)
             .toList();
+        print(temps);
         var i = -1.0, j = -1;
 
         return AspectRatio(
@@ -73,9 +81,9 @@ class _LogsTemperatureState extends State<LogsTemperature> {
             child: LineChart(
               LineChartData(
                 minX: 0.0,
-                maxX: temps.length.toDouble() - 1,
+                maxX: 24.0,
                 minY: 0.0,
-                maxY: 26.0 * 0.5,
+                maxY: 10.0,
                 gridData: FlGridData(show: false),
                 titlesData: FlTitlesData(
                   topTitles:
@@ -127,7 +135,7 @@ class _LogsTemperatureState extends State<LogsTemperature> {
                     getTooltipItems: (touchedSpots) {
                       return touchedSpots.map((spot) {
                         return LineTooltipItem(
-                          "${temps[spot.x.toInt()]["avgTemperature"]}",
+                          "${temps[spot.x.toInt()]["avg_temperature"]}\n${timeString12hrs(spot.x.toInt())}",
                           TextStyle(color: Colors.black),
                         );
                       }).toList();
@@ -138,7 +146,7 @@ class _LogsTemperatureState extends State<LogsTemperature> {
                   LineChartBarData(
                     spots: temps.map((t) {
                       i++;
-                      return FlSpot(i, t["adjTemperature"] as double);
+                      return FlSpot(i, t["adj_temperature"]);
                     }).toList(),
                     isCurved: false,
                     barWidth: 3,
@@ -147,7 +155,7 @@ class _LogsTemperatureState extends State<LogsTemperature> {
                       show: true,
                       gradient: const LinearGradient(
                         colors: [
-                          Color.fromARGB(90, 255, 255, 255),
+                          Color.fromARGB(55, 255, 255, 255),
                           Colors.transparent
                         ],
                         end: Alignment.bottomCenter,
@@ -158,7 +166,7 @@ class _LogsTemperatureState extends State<LogsTemperature> {
                     dotData: FlDotData(
                       show: true,
                       getDotPainter: (p0, p1, p2, p3) =>
-                          FlDotCirclePainter(radius: 6, color: Colors.white),
+                          FlDotCirclePainter(radius: 8, color: Colors.white),
                     ),
                   )
                 ],
