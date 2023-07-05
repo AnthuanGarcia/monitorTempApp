@@ -19,30 +19,20 @@ void main(){
 	vec2 uv=(2.*FlutterFragCoord()-resolution.xy)/resolution.y;
 	
 	vec3 col;
-	
-	uv.x+=.6*cos(uv.y*3.+time*.25);
-	uv.y+=.2*sin(uv.x*3.+time*.25);
-	uv*=rot2D(time*.1);
-	
-	uv.x+=.6/2.*cos(uv.y*2.*3.+time*.25);
-	uv.y+=.2/2.*sin(uv.x*2.*3.+time*.25);
-	uv*=rot2D(time*.1);
-	
-	uv.x+=.6/3.*cos(uv.y*3.*3.+time*.25);
-	uv.y+=.2/3.*sin(uv.x*3.*3.+time*.25);
-	uv*=rot2D(time*.1);
-	
-	uv.x+=.6/4.*cos(uv.y*4.*3.+time*.25);
-	uv.y+=.2/4.*sin(uv.x*4.*3.+time*.25);
-	uv*=rot2D(time*.1);
-	
+
 	float t=time*.25;
-	
-	vec3 a=.5*vec3(
-		sin(uv.x+cos(uv.y)+t),
-		cos(dot(uv,uv)+t),
-		sin(sin(uv.x)+cos(uv.y)+t)
-	)+.5;
+
+	for(float i = 1.0; i <= 4.0; i += 1.0) {
+		uv.x+=length(uv.y*0.5)/i*cos(uv.y*5.+t);
+		uv.y+=length(uv.x*0.5)/i*sin(uv.x*3.+t);
+		uv*=rot2D(time*.1);
+	}
+		
+	//vec3 a=.5*vec3(
+	//	sin(uv.x+cos(uv.y)+t),
+	//	cos(dot(uv,uv)+t),
+	//	sin(sin(uv.x)+cos(uv.y)+t)
+	//)+.5;
 	
 	col = mix(
 		mix(
@@ -54,19 +44,19 @@ void main(){
 					vec3(1.0, 0.6941, 0.6941),
 					temperature
 				),
-				vec3(1, 0.4, 0),
+		      vec3(1.0, 0.5294, 0.0588),
 				histBack
 			),
 			mix(
 				mix(
-					vec3(.3961,.5059,.9922),
+					vec3(0.9176, 0.5176, 1.0),
 					vec3(0.9922, 0.3961, 0.3961),
 					temperature
 				),
-				vec3(1, 0, 0.7),
+				vec3(0.949, 0.0431, 0.4824),
 				histBack
 			),
-			a.x
+			uv.x * 0.5 + 0.5
 		),
 		mix(
 			mix(
@@ -74,10 +64,10 @@ void main(){
 				vec3(1.0, 0.1333, 0.1333),
 				temperature
 			),
-			vec3(0.0, 0.3176, 1.0),
+			vec3(1.0, 0.6314, 0.2627),
 			histBack
 		),
-		a.z
+		uv.y * 0.5 + 0.5
 	);
 	
 	fragColor=vec4(col,1);

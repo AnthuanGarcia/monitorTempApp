@@ -66,7 +66,7 @@ class _LogsTemperatureState extends State<LogsTemperature> {
                 ? {"avg_temperature": 0.0, "adj_temperature": 0.0}
                 : val as Map<String, dynamic>)
             .toList();
-        print(temps);
+        //print(temps);
         var i = -1.0, j = -1;
 
         return AspectRatio(
@@ -84,7 +84,19 @@ class _LogsTemperatureState extends State<LogsTemperature> {
                 maxX: 24.0,
                 minY: 0.0,
                 maxY: 10.0,
-                gridData: FlGridData(show: false),
+                gridData: FlGridData(
+                  show: true,
+                  horizontalInterval: 1,
+                  verticalInterval: 6,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: const Color.fromARGB(60, 255, 255, 255),
+                    strokeWidth: 1.25,
+                  ),
+                  getDrawingVerticalLine: (value) => FlLine(
+                    color: const Color.fromARGB(60, 255, 255, 255),
+                    strokeWidth: 1.25,
+                  ),
+                ),
                 titlesData: FlTitlesData(
                   topTitles:
                       AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -135,7 +147,7 @@ class _LogsTemperatureState extends State<LogsTemperature> {
                     getTooltipItems: (touchedSpots) {
                       return touchedSpots.map((spot) {
                         return LineTooltipItem(
-                          "${temps[spot.x.toInt()]["avg_temperature"]}\n${timeString12hrs(spot.x.toInt())}",
+                          "${(temps[spot.x.toInt()]["avg_temperature"] as num).toStringAsFixed(2)}\n${timeString12hrs(spot.x.toInt())}",
                           TextStyle(color: Colors.black),
                         );
                       }).toList();
@@ -165,8 +177,11 @@ class _LogsTemperatureState extends State<LogsTemperature> {
                     ),
                     dotData: FlDotData(
                       show: true,
-                      getDotPainter: (p0, p1, p2, p3) =>
-                          FlDotCirclePainter(radius: 8, color: Colors.white),
+                      getDotPainter: (p0, p1, p2, p3) => FlDotCirclePainter(
+                        radius: 10,
+                        color: Colors.transparent,
+                        strokeWidth: 0.0,
+                      ),
                     ),
                   )
                 ],
