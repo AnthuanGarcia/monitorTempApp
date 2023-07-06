@@ -81,7 +81,7 @@ class _LogsTemperatureState extends State<LogsTemperature> {
             child: LineChart(
               LineChartData(
                 minX: 0.0,
-                maxX: 24.0,
+                maxX: 23.0,
                 minY: 0.0,
                 maxY: 10.0,
                 gridData: FlGridData(
