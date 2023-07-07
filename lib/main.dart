@@ -216,24 +216,22 @@ class _MonitorPageState extends State<MonitorPage>
       grad.setUniform<double>('histBack', _changeBackHist!.value);
     });
 
-    final token = prefs.getString("user_token");
-    if (token != null) {
-      print("O_o\n$token");
-      return;
-    }
+    FirebaseAuth.instance.signInAnonymously().whenComplete(
+      () async {
+        final token = await messaging.getToken();
+        final storageToken = prefs.getString("user_token");
 
-    print("No deberia llegar hasta aqui");
+        if (storageToken != null) {
+          print("O_o\n$token");
+          return;
+        }
 
-    messaging.getToken().then(
-      (token) {
-        FirebaseAuth.instance.signInAnonymously().then((value) {
-          FirebaseFirestore.instance.collection("tokens").add(<String, dynamic>{
-            "token": token!,
-            "created_at": DateTime.now().toIso8601String()
-          });
-
-          prefs.setString("user_token", token);
+        FirebaseFirestore.instance.collection("tokens").add(<String, dynamic>{
+          "token": token!,
+          "created_at": DateTime.now().toIso8601String()
         });
+
+        prefs.setString("user_token", token);
       },
     );
   }

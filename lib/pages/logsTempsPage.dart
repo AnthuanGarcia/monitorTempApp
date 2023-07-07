@@ -53,7 +53,7 @@ class _LogsTemperatureState extends State<LogsTemperature> {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           print("------------->${snapshot.error}");
-          return const Text("Error");
+          return Text("Error: ${snapshot.error}");
         }
 
         if (!snapshot.hasData) {
