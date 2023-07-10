@@ -49,6 +49,8 @@ dependencies:
   cloud_firestore: ^4.7.1
   firebase_auth: ^4.6.1
   fl_chart: ^0.62.0
+  dart_ping: ^8.0.1
+  network_info_plus: ^4.0.1
 
 dev_dependencies:
   flutter_test:
@@ -78,6 +80,8 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
       - assets/imgs/warning.png
+      - assets/imgs/check.png
+      - assets/imgs/warning_ad.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

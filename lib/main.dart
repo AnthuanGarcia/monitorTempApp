@@ -13,7 +13,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:temp_monitor/pages/configPage.dart';
 import 'package:temp_monitor/pages/logsTempsPage.dart';
 import 'package:temp_monitor/pages/mainPage.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 //import 'package:temp_monitor/src/shader_painter.dart';
 //import 'package:flutter_shaders/flutter_shaders.dart';
 
@@ -217,24 +216,21 @@ class _MonitorPageState extends State<MonitorPage>
       grad.setUniform<double>('histBack', _changeBackHist!.value);
     });
 
-    FirebaseAuth.instance.signInAnonymously().whenComplete(
-      () async {
-        final token = await messaging.getToken();
-        final storageToken = prefs.getString("user_token");
+    final storageToken = prefs.getString("user_token");
 
-        if (storageToken != null) {
-          print("O_o\n$token");
-          return;
-        }
+    if (storageToken != null) {
+      print("O_o\n$storageToken");
+      return;
+    }
 
-        FirebaseFirestore.instance.collection("tokens").add(<String, dynamic>{
-          "token": token!,
-          "created_at": DateTime.now().toIso8601String()
-        });
+    messaging.getToken().then((token) {
+      FirebaseFirestore.instance.collection("tokens").add(<String, dynamic>{
+        "token": token!,
+        "created_at": DateTime.now().toIso8601String()
+      });
 
-        prefs.setString("user_token", token);
-      },
-    );
+      prefs.setString("user_token", token);
+    });
   }
 
   @override

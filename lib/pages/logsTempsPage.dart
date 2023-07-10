@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -13,6 +14,15 @@ class LogsTemperature extends StatefulWidget {
 
 class _LogsTemperatureState extends State<LogsTemperature> {
   FirebaseFirestore db = FirebaseFirestore.instance;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    FirebaseAuth.instance
+        .signInAnonymously()
+        .whenComplete(() => setState(() {}));
+  }
 
   String timeString12hrs(int hour) {
     String amPm = "AM";
