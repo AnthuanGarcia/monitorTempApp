@@ -17,9 +17,9 @@ class Ambient {
       heatIndex: json["heatIndex"] as num);
 
   factory Ambient.fromDbSnap(Map<dynamic, dynamic> snap) => Ambient(
-        movement: snap["test"]["move"] as num,
-        temperature: snap["test"]["temperature"] as num,
-        humidity: snap["test"]["humidity"] as num,
-        heatIndex: snap["test"]["heatIndex"] as num,
+        movement: snap["site"]["move"] as num,
+        temperature: snap["site"]["temperature"] as num,
+        humidity: snap["site"]["humidity"] as num,
+        heatIndex: snap["site"]["heatIndex"] as num,
       );
 }

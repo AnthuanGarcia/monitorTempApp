@@ -10,6 +10,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:shady/shady.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:temp_monitor/pages/configPage.dart';
 import 'package:temp_monitor/pages/logsTempsPage.dart';
 import 'package:temp_monitor/pages/mainPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -264,6 +265,7 @@ class _MonitorPageState extends State<MonitorPage>
                 children: [
                   MainPage(changeBackCol: setCol, undoBackCol: undoCol),
                   const LogsTemperature(),
+                  const Config()
                 ],
                 onPageChanged: (page) {
                   setState(() {

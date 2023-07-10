@@ -57,7 +57,16 @@ class _LogsTemperatureState extends State<LogsTemperature> {
         }
 
         if (!snapshot.hasData) {
-          return const Text("No data");
+          return const Center(
+            child: Text(
+              "No hay datos disponibles",
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.white,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+          );
         }
 
         final data = snapshot.data!.data();
