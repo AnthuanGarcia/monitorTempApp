@@ -166,7 +166,7 @@ class _LogsTemperatureState extends State<LogsTemperature> {
                     getTooltipItems: (touchedSpots) {
                       return touchedSpots.map((spot) {
                         return LineTooltipItem(
-                          "${(temps[spot.x.toInt()]["avg_temperature"] as num).toStringAsFixed(2)}\n${timeString12hrs(spot.x.toInt())}",
+                          "${(temps[spot.x.toInt()]["avg_temperature"] as num).toStringAsFixed(2)}°C\n${timeString12hrs(spot.x.toInt())}",
                           TextStyle(color: Colors.black),
                         );
                       }).toList();

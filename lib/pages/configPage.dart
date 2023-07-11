@@ -14,22 +14,19 @@ class _ConfigState extends State<Config> {
   DatabaseReference dbrt = FirebaseDatabase.instance.ref();
 
   static const styleHead = TextStyle(
-    color: Colors.black,
+    color: Colors.white,
     fontSize: 24,
     fontWeight: FontWeight.w300,
   );
 
   static const styleBody = TextStyle(
-    color: Colors.black,
+    color: Colors.white,
     fontSize: 18,
     fontWeight: FontWeight.w300,
   );
 
-  bool isConnected = false;
-  bool enabled = true;
-
   List<String> resetInfo = [
-    "Se ha reiniciado exitosamente",
+    "Se ha reiniciado el microntrolador",
     "Error al reiniciar",
   ];
 
@@ -54,14 +51,11 @@ class _ConfigState extends State<Config> {
 
         return Container(
           margin: const EdgeInsets.symmetric(vertical: 80.0, horizontal: 16),
-          child: Column(
+          child: Flex(
+            direction: Axis.vertical,
             children: [
               Container(
                 padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                ),
                 child: Table(
                   border: TableBorder.all(color: Colors.transparent),
                   defaultVerticalAlignment: TableCellVerticalAlignment.middle,
@@ -83,85 +77,118 @@ class _ConfigState extends State<Config> {
                   ],
                 ),
               ),
-              Spacer(),
+              Spacer(flex: 3),
               StreamBuilder(
                 stream: ping.stream,
                 builder: (context, snapshot) {
                   final ipTest = snapshot.data?.response?.ip;
+                  bool isConnected = ipTest == ip;
 
                   if (!snapshot.hasData ||
                       snapshot.hasError ||
                       ipTest == null) {
-                    isConnected = false;
-                    return Image(
-                      image: AssetImage('assets/imgs/warning_ad.png'),
-                      fit: BoxFit.fitHeight,
-                      height: MediaQuery.of(context).size.width * .1,
-                      width: MediaQuery.of(context).size.width * .1,
+                    return Flex(
+                      direction: Axis.vertical,
+                      children: [
+                        Image(
+                          image: AssetImage('assets/imgs/warning_ad.png'),
+                          fit: BoxFit.fitHeight,
+                          height: MediaQuery.of(context).size.width * .45,
+                          width: MediaQuery.of(context).size.width * .45,
+                        ),
+                        Text("Desconectado", style: styleBody),
+                        SizedBox(
+                          height: MediaQuery.of(context).size.width * .45,
+                        ),
+                        Text(
+                          "Es necesario que el microcontrolador este en linea y debes estar conectado a la misma red para esta operacion",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        )
+                      ],
                     );
                   }
 
-                  isConnected = true;
-
-                  return Image(
-                    image: AssetImage('assets/imgs/check.png'),
-                    fit: BoxFit.fitHeight,
-                    height: MediaQuery.of(context).size.width * .1,
-                    width: MediaQuery.of(context).size.width * .1,
-                  );
-                },
-              ),
-              Spacer(),
-              isConnected
-                  ? AbsorbPointer(
-                      absorbing: !enabled,
-                      child: InkWell(
+                  return Flex(
+                    direction: Axis.vertical,
+                    children: [
+                      Image(
+                        image: AssetImage('assets/imgs/check.png'),
+                        fit: BoxFit.fitHeight,
+                        height: MediaQuery.of(context).size.width * .38,
+                        width: MediaQuery.of(context).size.width * .38,
+                      ),
+                      SizedBox(height: MediaQuery.of(context).size.width * .05),
+                      Text("Conectado", style: styleBody),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.width * .45,
+                      ),
+                      InkWell(
                         onTap: () {
-                          setState(() {
-                            enabled = false;
-                          });
-
                           http
                               .get(Uri.parse("http://$ip:80/reset"))
                               .then((res) {
                             if (res.statusCode == 200) {
-                              AlertDialog(
-                                title: Text("Reinicio Exitoso"),
-                                content: Text(resetInfo[0]),
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text("Reinicio Exitoso"),
+                                  content: Text(resetInfo[0]),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, 'OK'),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
                               );
                             } else {
-                              AlertDialog(
-                                title: Text("Reinicio Fallido"),
-                                content: Text(resetInfo[1]),
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text("Reinicio Fallido"),
+                                  content: Text(resetInfo[1]),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, 'OK'),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
                               );
                             }
-
-                            setState(() {
-                              isConnected = false;
-                              enabled = true;
-                            });
                           });
                         },
                         child: Container(
                           width: MediaQuery.of(context).size.height * .3,
                           padding: EdgeInsets.all(16),
-                          child: Text(
-                            "Reiniciar",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.w300),
-                          ),
+                          child: isConnected
+                              ? Text(
+                                  "Reiniciar",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w300),
+                                )
+                              : CircularProgressIndicator(),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.all(Radius.circular(60)),
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(60),
+                            ),
                           ),
                         ),
-                      ),
-                    )
-                  : Text(
-                      "Es necesario estar conectado a la misma red del microcontrolador para esta operacion",
-                      textAlign: TextAlign.center,
-                    )
+                      )
+                    ],
+                  );
+                },
+              ),
             ],
           ),
         );
