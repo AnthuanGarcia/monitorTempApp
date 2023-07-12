@@ -10,7 +10,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:shady/shady.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:temp_monitor/pages/configPage.dart';
+import 'package:temp_monitor/pages/logsMovePage.dart';
 import 'package:temp_monitor/pages/logsTempsPage.dart';
 import 'package:temp_monitor/pages/mainPage.dart';
 //import 'package:temp_monitor/src/shader_painter.dart';
@@ -160,7 +162,6 @@ class MonitorPage extends StatefulWidget {
 class _MonitorPageState extends State<MonitorPage>
     with TickerProviderStateMixin {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
-  FirebaseAuth auth = FirebaseAuth.instance;
 
   final PageController _controller = PageController();
 
@@ -216,17 +217,28 @@ class _MonitorPageState extends State<MonitorPage>
       grad.setUniform<double>('histBack', _changeBackHist!.value);
     });
 
-    if (auth.currentUser == null) {
-      print("For some reason this doesnt work :'v");
-      auth.signInAnonymously().then((user) {
-        messaging.getToken().then((token) {
-          FirebaseFirestore.instance.collection("tokens").add(<String, dynamic>{
-            "token": token!,
-            "created_at": DateTime.now().toIso8601String()
+    FirebaseAuth auth = FirebaseAuth.instance;
+
+    SharedPreferences.getInstance().then((prefs) {
+      String? idUser = prefs.getString("user_id");
+      if (idUser == null ||
+          auth.currentUser == null ||
+          idUser != auth.currentUser?.uid) {
+        auth.signInAnonymously().then((data) {
+          prefs.setString("user_id", data.user!.uid);
+
+          messaging.getToken().then((token) {
+            FirebaseFirestore.instance
+                .collection("tokens")
+                .add(<String, dynamic>{
+              "token": token!,
+              "created_at": DateTime.now().toIso8601String()
+            });
           });
+          setState(() {});
         });
-      });
-    }
+      }
+    });
   }
 
   @override
@@ -257,7 +269,8 @@ class _MonitorPageState extends State<MonitorPage>
                 children: [
                   MainPage(changeBackCol: setCol, undoBackCol: undoCol),
                   const LogsTemperature(),
-                  const Config()
+                  const LogsMovement(),
+                  const Config(),
                 ],
                 onPageChanged: (page) {
                   setState(() {

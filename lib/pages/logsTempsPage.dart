@@ -19,9 +19,6 @@ class _LogsTemperatureState extends State<LogsTemperature> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    FirebaseAuth.instance
-        .signInAnonymously()
-        .whenComplete(() => setState(() {}));
   }
 
   String timeString12hrs(int hour) {
@@ -61,6 +58,19 @@ class _LogsTemperatureState extends State<LogsTemperature> {
     return StreamBuilder(
       stream: db.collection("temperatures").doc("values").snapshots(),
       builder: (context, snapshot) {
+        if (FirebaseAuth.instance.currentUser == null) {
+          return const Center(
+            child: Text(
+              "Obteniendo datos...",
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.white,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+          );
+        }
+
         if (snapshot.hasError) {
           print("------------->${snapshot.error}");
           return Text("Error: ${snapshot.error}");
@@ -86,7 +96,7 @@ class _LogsTemperatureState extends State<LogsTemperature> {
                 : val as Map<String, dynamic>)
             .toList();
         //print(temps);
-        var i = -1.0, j = -1;
+        var i = -1.0;
 
         return AspectRatio(
           aspectRatio: 1.7,
