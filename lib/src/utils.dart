@@ -9,6 +9,21 @@ class Utils {
     "Sábado",
   ];
 
+  static const months = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ];
+
   static String weekDay(int day, int month, int year) {
     List<int> t = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
     year -= (month < 3) as int;
