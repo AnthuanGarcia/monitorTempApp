@@ -1,12 +1,12 @@
 class Utils {
   static const weekDays = [
-    "Domingo",
     "Lunes",
     "Martes",
     "Miércoles",
     "Jueves",
     "Viernes",
     "Sábado",
+    "Domingo",
   ];
 
   static const months = [
