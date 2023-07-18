@@ -12,59 +12,92 @@ class LogsMovement extends StatefulWidget {
 
 class _LogsMovementState extends State<LogsMovement> {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  List<bool> shit = List.generate(7, (index) => false);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: SingleChildScrollView(
-        child: Container(
-          child: StreamBuilder(
-            stream: _db.collection("movement").snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                print(snapshot.error);
-                return Text("Error");
-              }
+    return StreamBuilder(
+      stream: _db.collection("movement").snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          print(snapshot.error);
+          return Text("Error");
+        }
 
-              final mapDocs =
-                  snapshot.data!.docs.map((e) => Item(data: e)) as List<Item>;
-              final indexes = mapDocs.asMap().keys.toList();
+        if (!snapshot.hasData) {
+          return Text("No data");
+        }
 
-              // TO DO
-              // - Replace the map func for mapDocs to indexes list :'v
-              return ExpansionPanelList(
-                expansionCallback: (idx, isExpanded) => setState(() {
-                  mapDocs[idx].isExpanded = !isExpanded;
-                }),
-                children: indexes.map(
-                  (i) {
-                    return ExpansionPanel(
-                      headerBuilder: (context, isExpanded) {
-                        String idDoc = mapDocs[i].data.id;
-                        List<int> date =
-                            idDoc.split("-").map((d) => int.parse(d)).toList();
+        final mapDocs = snapshot.data!.docs.map((e) => Item(data: e)).toList();
+        final indexes = mapDocs.asMap().keys.toList();
 
-                        String title =
-                            "${Utils.weekDay(date[0], date[1], date[2])}, ${date[0]} de ${Utils.months[date[1]]} del ${date[2]}";
+        // TO DO
+        // - Replace the map func for mapDocs to indexes list :'v
+        return Container(
+          margin: EdgeInsets.all(MediaQuery.of(context).size.width * .075),
+          child: SingleChildScrollView(
+            child: ExpansionPanelList(
+              elevation: 0,
+              dividerColor: Colors.transparent,
+              expansionCallback: (idx, isExpanded) {
+                setState(() {
+                  shit[idx] = !isExpanded;
+                });
+              },
+              children: indexes.map(
+                (i) {
+                  //final doc = mapDocs[i];
+                  final logs = mapDocs[i].data.data()["move_logs"] as List;
+                  print(logs);
 
-                        return ListTile(title: Text(title));
+                  return ExpansionPanel(
+                    backgroundColor: Colors.transparent,
+                    headerBuilder: (context, isExpanded) {
+                      List<int> date = mapDocs[i]
+                          .data
+                          .id
+                          .split("-")
+                          .map((d) => int.parse(d))
+                          .toList();
+
+                      String title =
+                          "${Utils.weekDay(date[0], date[1], date[2])}, ${date[0]} de ${Utils.months[date[1] - 1]} del ${date[2]}";
+
+                      return ListTile(
+                          title: Text(
+                        title,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ));
+                    },
+                    body: ListView.builder(
+                      clipBehavior: Clip.none,
+                      shrinkWrap: true,
+                      itemCount: logs.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          title: Text(
+                            logs[index],
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w300,
+                            ),
+                          ),
+                        );
                       },
-                      body: ListView.builder(
-                        itemCount: (mapDocs[i].data.data()["move_logs"] as List)
-                            .length,
-                        itemBuilder: (ctx, idx) {
-                          //final logs = ;
-                          return Text("");
-                        },
-                      ),
-                    );
-                  },
-                ).toList(),
-              );
-            },
+                    ),
+                    isExpanded: shit[i],
+                  );
+                },
+              ).toList(),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
