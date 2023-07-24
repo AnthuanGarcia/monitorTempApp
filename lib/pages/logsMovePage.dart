@@ -30,31 +30,74 @@ class _LogsMovementState extends State<LogsMovement> {
           return Text("No data");
         }
 
-        final mapDocs = snapshot.data!.docs.map((e) => Item(data: e)).toList();
-        final indexes = mapDocs.asMap().keys.toList();
+        final docs = snapshot.data!.docs.map((e) => Item(data: e)).toList();
+        //final indexes = docs.asMap().keys.toList();
 
         return PageView.builder(
           controller: _controller,
-          itemCount: Utils.weekDays.length,
+          itemCount: docs.length,
           scrollDirection: Axis.horizontal,
           itemBuilder: (context, index) {
-            return Center(
-              child: Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white, width: 1.25),
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(10),
+            List<int> date = docs[index]
+                .data
+                .id
+                .split("-")
+                .map((d) => int.parse(d))
+                .toList();
+
+            String title =
+                "${Utils.weekDay(date[0], date[1], date[2])}, ${date[0]}/${date[1]}/${date[2]}";
+
+            final logs = docs[index].data.data()["move_logs"] as List;
+
+            return SingleChildScrollView(
+              child: Column(
+                //direction: Axis.vertical,
+                children: [
+                  Container(
+                    margin: EdgeInsets.all(20),
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
                   ),
-                ),
-                child: Text(
-                  Utils.weekDays[index],
-                  style: TextStyle(
-                    fontSize: 36,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w300,
-                  ),
-                ),
+                  logs.isEmpty
+                      ? Container(
+                          margin: EdgeInsets.only(
+                              top: MediaQuery.of(context).size.height * 0.4),
+                          child: Text(
+                            "Sin lecturas de movimiento",
+                            style: TextStyle(
+                              fontSize: 24,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w300,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          height: MediaQuery.of(context).size.height * .75,
+                          margin: EdgeInsets.all(18),
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: logs.length,
+                            itemBuilder: (context, index) {
+                              return Container(
+                                margin: EdgeInsets.all(16),
+                                child: Text(
+                                  logs[index],
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontSize: 18, color: Colors.white),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                ],
               ),
             );
           },

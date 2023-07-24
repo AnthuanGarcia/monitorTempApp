@@ -129,41 +129,41 @@ class _ConfigState extends State<Config> {
                       ),
                       InkWell(
                         onTap: () {
-                          http
-                              .get(Uri.parse("http://$ip:80/reset"))
-                              .then((res) {
-                            if (res.statusCode == 200) {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text("Reinicio Exitoso"),
-                                  content: Text(resetInfo[0]),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, 'OK'),
-                                      child: const Text('OK'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            } else {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text("Reinicio Fallido"),
-                                  content: Text(resetInfo[1]),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(context, 'OK'),
-                                      child: const Text('OK'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                          });
+                          http.get(Uri.parse("http://$ip:80/reset")).then(
+                            (res) {
+                              if (res.statusCode == 200) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text("Reinicio Exitoso"),
+                                    content: Text(resetInfo[0]),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, 'OK'),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text("Reinicio Fallido"),
+                                    content: Text(resetInfo[1]),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, 'OK'),
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                            },
+                          );
                         },
                         child: Container(
                           width: MediaQuery.of(context).size.height * .3,
