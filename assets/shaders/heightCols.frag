@@ -3,7 +3,10 @@
 uniform vec3 resolution;
 uniform float time;
 uniform float temperature;
-uniform float histBack;
+uniform float colInt;
+uniform vec3 priCol; // Primary
+uniform vec3 secCol; // Secondary
+uniform vec3 mainCol; // Main
 
 out vec4 fragColor;
 
@@ -35,7 +38,7 @@ void main(){
 	//)+.5;
 	
 	col = mix(
-		mix(
+		/*mix(
 			//vec3(1.0, 1.0, 1.0),
 			//vec3(0.0, 0.1961, 0.9882),
 			mix(
@@ -44,8 +47,8 @@ void main(){
 					vec3(1.0, 0.6941, 0.6941),
 					temperature
 				),
-		      vec3(1.0, 0.5294, 0.0588),
-				histBack
+		      	priCol //vec3(1.0, 0.5294, 0.0588),
+				colInt
 			),
 			mix(
 				mix(
@@ -53,20 +56,26 @@ void main(){
 					vec3(0.9922, 0.8039, 0.3961),
 					temperature
 				),
-				vec3(0.949, 0.0431, 0.4824),
-				histBack
+				secCol //vec3(0.949, 0.0431, 0.4824),
+				colInt
 			),
 			uv.x * 0.5 + 0.5
-		),
+		),*/
 		mix(
+			priCol,
+			secCol,
+			uv.x * 0.5 + 0.5
+		),
+		/*mix(
 			mix(
 				vec3(.1333,.5804,1.),
 				vec3(1.0, 0.1333, 0.1333),
 				temperature
 			),
-			vec3(1.0, 0.6314, 0.2627),
-			histBack
-		),
+			mainCol //vec3(1.0, 0.6314, 0.2627),
+			colInt
+		),*/
+		mainCol,
 		uv.y * 0.5 + 0.5
 	);
 	

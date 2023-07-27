@@ -19,6 +19,7 @@ class _LogsTemperatureState extends State<LogsTemperature> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    print("------------------------------------------------>Hola");
   }
 
   String timeString12hrs(int hour) {
