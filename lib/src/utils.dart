@@ -1,3 +1,5 @@
+import 'package:vector_math/vector_math.dart';
+
 class Utils {
   static const weekDays = [
     "Domingo",
@@ -30,5 +32,13 @@ class Utils {
     return weekDays[
         (year + year ~/ 4 - year ~/ 100 + year ~/ 400 + t[month - 1] + day) %
             7];
+  }
+
+  static Vector3 Lerp(Vector3 a, Vector3 b, double t) {
+    return Vector3(
+      (1.0 - t) * a.x + t * b.x,
+      (1.0 - t) * a.y + t * b.y,
+      (1.0 - t) * a.z + t * b.z,
+    );
   }
 }

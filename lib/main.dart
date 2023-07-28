@@ -15,6 +15,8 @@ import 'package:temp_monitor/pages/configPage.dart';
 import 'package:temp_monitor/pages/logsMovePage.dart';
 import 'package:temp_monitor/pages/logsTempsPage.dart';
 import 'package:temp_monitor/pages/mainPage.dart';
+import 'package:temp_monitor/src/utils.dart';
+import 'package:vector_math/vector_math.dart' as math;
 //import 'package:vector_math/vector_math.dart';
 //import 'package:temp_monitor/src/shader_painter.dart';
 //import 'package:flutter_shaders/flutter_shaders.dart';
@@ -178,6 +180,7 @@ class _MonitorPageState extends State<MonitorPage>
 
   AnimationController? _animationController, _animationControllerColPage;
   Animation<double>? _changeBack, _changeBackPage;
+  math.Vector3 currentCol = math.Vector3.zero();
 
   int _selectedIndex = 0;
 
@@ -187,6 +190,13 @@ class _MonitorPageState extends State<MonitorPage>
 
   void undoCol() {
     _animationController!.reverse();
+  }
+
+  void changeColPage(math.Vector3 col) {
+    _changeBackPage!.addListener(() {
+      currentCol = Utils.Lerp(currentCol, col, _changeBackPage!.value);
+      grad.setUniform<math.Vector3>("priCol", currentCol);
+    });
   }
 
   @override
@@ -216,10 +226,6 @@ class _MonitorPageState extends State<MonitorPage>
       begin: 0.0,
       end: 1.0,
     ).animate(_animationControllerColPage!);
-
-    _changeBackPage!.addListener(() {
-      grad.setUniform<double>('colInt', _changeBackPage!.value);
-    });
 
     FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -278,20 +284,7 @@ class _MonitorPageState extends State<MonitorPage>
                 ],
                 onPageChanged: (page) {
                   setState(() {
-                    /*if (page == 1) {
-                      _animationControllerHist!.forward();
-                    } else {
-                      _animationControllerHist!.reverse();
-                    }
-                    if (page > 0) {
-                      _animationControllerColPage!.forward();
-                    } else {
-                      _animationControllerColPage!.reverse();
-                    }
-
-                    if (page == 1) {
-                      grad.setUniform<Vector3>("priCol", );
-                    }*/
+                    if (page == 1) {}
                   });
                 },
               ),
