@@ -1,7 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:temp_monitor/src/item.dart';
 import 'package:temp_monitor/src/utils.dart';
 
 class LogsMovement extends StatefulWidget {
@@ -30,7 +28,7 @@ class _LogsMovementState extends State<LogsMovement> {
           return Text("No data");
         }
 
-        final docs = snapshot.data!.docs.map((e) => Item(data: e)).toList();
+        final docs = snapshot.data!.docs;
         //final indexes = docs.asMap().keys.toList();
 
         return PageView.builder(
@@ -38,17 +36,13 @@ class _LogsMovementState extends State<LogsMovement> {
           itemCount: docs.length,
           scrollDirection: Axis.horizontal,
           itemBuilder: (context, index) {
-            List<int> date = docs[index]
-                .data
-                .id
-                .split("-")
-                .map((d) => int.parse(d))
-                .toList();
+            List<int> date =
+                docs[index].id.split("-").map((d) => int.parse(d)).toList();
 
             String title =
                 "${Utils.weekDay(date[0], date[1], date[2])}, ${date[0]}/${date[1]}/${date[2]}";
 
-            final logs = docs[index].data.data()["move_logs"] as List;
+            final logs = docs[index].data()["move_logs"] as List;
 
             return SingleChildScrollView(
               child: Column(
@@ -65,7 +59,7 @@ class _LogsMovementState extends State<LogsMovement> {
                       ),
                     ),
                   ),
-                  logs.isEmpty
+                  (logs.isEmpty || logs == null)
                       ? Container(
                           margin: EdgeInsets.only(
                               top: MediaQuery.of(context).size.height * 0.4),

@@ -180,7 +180,10 @@ class _MonitorPageState extends State<MonitorPage>
 
   AnimationController? _animationController, _animationControllerColPage;
   Animation<double>? _changeBack, _changeBackPage;
-  math.Vector3 currentCol = math.Vector3.zero();
+  //math.Vector3 currentCol = math.Vector3.zero();
+  math.Vector3 priCol = math.Vector3.zero();
+  math.Vector3 secCol = math.Vector3.zero();
+  math.Vector3 mainCol = math.Vector3.zero();
 
   int _selectedIndex = 0;
 
@@ -194,8 +197,14 @@ class _MonitorPageState extends State<MonitorPage>
 
   void changeColPage(math.Vector3 col) {
     _changeBackPage!.addListener(() {
-      currentCol = Utils.Lerp(currentCol, col, _changeBackPage!.value);
-      grad.setUniform<math.Vector3>("priCol", currentCol);
+      priCol = Utils.Lerp(priCol, col, _changeBackPage!.value);
+      grad.setUniform<math.Vector3>("priCol", priCol);
+
+      secCol = Utils.Lerp(secCol, col, _changeBackPage!.value);
+      grad.setUniform<math.Vector3>("secCol", secCol);
+
+      mainCol = Utils.Lerp(mainCol, col, _changeBackPage!.value);
+      grad.setUniform<math.Vector3>("mainCol", mainCol);
     });
   }
 
