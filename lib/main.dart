@@ -15,6 +15,7 @@ import 'package:temp_monitor/pages/configPage.dart';
 import 'package:temp_monitor/pages/logsMovePage.dart';
 import 'package:temp_monitor/pages/logsTempsPage.dart';
 import 'package:temp_monitor/pages/mainPage.dart';
+import 'package:temp_monitor/src/palette.dart';
 import 'package:temp_monitor/src/utils.dart';
 import 'package:vector_math/vector_math.dart' as math;
 //import 'package:vector_math/vector_math.dart';
@@ -168,51 +169,58 @@ class _MonitorPageState extends State<MonitorPage>
 
   final PageController _controller = PageController();
 
+  AnimationController? _animationControllerTemp, _animationControllerColPage;
+  Animation<double>? _changeBackTemp, _changeBackPage;
+  //math.Vector3 currentCol = math.Vector3.zero();
+  Palette cols = Palette(
+        primary: math.Vector3(.6941, .8353, 1.0),
+        secondary: math.Vector3(0.9176, 0.5176, 1.0),
+        main: math.Vector3(.1333, .5804, 1.0),
+      ),
+      colors = Palette(
+        primary: math.Vector3(1.0, 0.5294, 0.0588),
+        secondary: math.Vector3(0.949, 0.0431, 0.4824),
+        main: math.Vector3(1.0, 0.6314, 0.2627),
+      );
+
+  final List<Widget> _pages = [
+    MainPage(changeBackCol: () {}, undoBackCol: () {}),
+    const LogsTemperature(),
+    const LogsMovement(),
+    const Config(),
+    const Placeholder(),
+    const Placeholder(),
+    const Placeholder()
+  ];
+
   final grad = Shady(assetName: 'assets/shaders/heightCols.frag', uniforms: [
     UniformVec3(key: 'resolution', transformer: UniformVec3.resolution),
     UniformFloat(key: 'time', transformer: UniformFloat.secondsPassed),
     UniformFloat(key: 'temperature'),
     UniformFloat(key: 'colInt'),
-    UniformVec3(key: 'priCol'),
-    UniformVec3(key: 'secCol'),
-    UniformVec3(key: 'mainCol'),
+    UniformVec3(key: 'priCol', initialValue: math.Vector3(.6941, .8353, 1.0)),
+    UniformVec3(key: 'secCol', initialValue: math.Vector3(0.9176, 0.5176, 1.0)),
+    UniformVec3(key: 'mainCol', initialValue: math.Vector3(.1333, .5804, 1.0)),
   ]);
-
-  AnimationController? _animationController, _animationControllerColPage;
-  Animation<double>? _changeBack, _changeBackPage;
-  //math.Vector3 currentCol = math.Vector3.zero();
-  math.Vector3 priCol = math.Vector3.zero();
-  math.Vector3 secCol = math.Vector3.zero();
-  math.Vector3 mainCol = math.Vector3.zero();
 
   int _selectedIndex = 0;
 
   void setCol() {
-    _animationController!.forward();
+    _animationControllerTemp!.forward();
   }
 
   void undoCol() {
-    _animationController!.reverse();
+    _animationControllerTemp!.reverse();
   }
 
-  void changeColPage(math.Vector3 col) {
-    _changeBackPage!.addListener(() {
-      priCol = Utils.Lerp(priCol, col, _changeBackPage!.value);
-      grad.setUniform<math.Vector3>("priCol", priCol);
-
-      secCol = Utils.Lerp(secCol, col, _changeBackPage!.value);
-      grad.setUniform<math.Vector3>("secCol", secCol);
-
-      mainCol = Utils.Lerp(mainCol, col, _changeBackPage!.value);
-      grad.setUniform<math.Vector3>("mainCol", mainCol);
-    });
-  }
+  /*void changeColPage(Palette colors) {
+  }*/
 
   @override
   void initState() {
     super.initState();
 
-    _animationController = AnimationController(
+    _animationControllerTemp = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     );
@@ -222,19 +230,55 @@ class _MonitorPageState extends State<MonitorPage>
       duration: const Duration(seconds: 2),
     );
 
-    _changeBack = Tween<double>(
+    _changeBackTemp = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(_animationController!);
+    ).animate(_animationControllerTemp!);
 
-    _changeBack!.addListener(() {
-      grad.setUniform<double>('temperature', _changeBack!.value);
+    _changeBackTemp!.addListener(() {
+      grad.setUniform<double>('temperature', _changeBackTemp!.value);
     });
 
     _changeBackPage = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(_animationControllerColPage!);
+
+    _controller.addListener(() {
+      double size = _controller.viewportFraction / _pages.length.toDouble();
+      double val = _controller.page!;
+
+      cols.primary = Utils.lerp(
+        cols.primary, colors.primary, val, //_changeBackPage!.value,
+      );
+
+      cols.secondary = Utils.lerp(
+        cols.secondary, colors.secondary, val, //_changeBackPage!.value,
+      );
+
+      cols.main = Utils.lerp(
+        cols.main, colors.main, val, //_changeBackPage!.value,
+      );
+
+      print("$val ${_controller.viewportFraction}");
+
+      grad.setUniform<math.Vector3>("priCol", cols.primary);
+      grad.setUniform<math.Vector3>("secCol", cols.secondary);
+      grad.setUniform<math.Vector3>("mainCol", cols.main);
+    });
+
+    /*double sizePage =
+        _controller.position.maxScrollExtent / _pages.length.toDouble();
+    double? lastPage = _controller.page;
+
+    _controller.addListener(() {
+      double pos = _controller.offset / sizePage;
+      double? currPage = _controller.page;
+
+      if (lastPage! < currPage!) {
+        pos -= sizePage;
+      } else if (lastPage > currPage) {}
+    });*/
 
     FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -264,7 +308,7 @@ class _MonitorPageState extends State<MonitorPage>
   void dispose() {
     // TODO: implement dispose
     super.dispose();
-    _animationController!.dispose();
+    _animationControllerTemp!.dispose();
     _animationControllerColPage!.dispose();
   }
 
@@ -282,22 +326,36 @@ class _MonitorPageState extends State<MonitorPage>
               child: ShadyCanvas(grad),
             ),
             Center(
-              child: PageView(
-                scrollDirection: Axis.vertical,
-                controller: _controller,
-                children: [
-                  MainPage(changeBackCol: setCol, undoBackCol: undoCol),
-                  const LogsTemperature(),
-                  const LogsMovement(),
-                  const Config(),
-                ],
-                onPageChanged: (page) {
+                child: PageView(
+              scrollDirection: Axis.vertical,
+              controller: _controller,
+              children: _pages,
+              onPageChanged: (page) {
+                /*//_animationControllerColPage!.reset();
                   setState(() {
-                    if (page == 1) {}
-                  });
-                },
-              ),
-            ),
+                    //while (!_animationControllerColPage!.isCompleted);
+                    if (page == 1) {
+                      changeColPage(Palette(
+                        primary: math.Vector3(1.0, 0.5294, 0.0588),
+                        secondary: math.Vector3(0.949, 0.0431, 0.4824),
+                        main: math.Vector3(1.0, 0.6314, 0.2627),
+                      ));
+                    } else {
+                      changeColPage(Palette(
+                        primary: math.Vector3(1.0, 0.0, 0.0),
+                        secondary: math.Vector3(0.0, 1, 0),
+                        main: math.Vector3(0, 0, 1),
+                      ));
+                    }
+
+                    //_animationControllerColPage!.forward();
+                    //print(
+                    //    "${_controller.offset}, ${_controller.position.minScrollExtent}");
+
+                    
+                  });*/
+              },
+            )),
           ],
         ),
       ),

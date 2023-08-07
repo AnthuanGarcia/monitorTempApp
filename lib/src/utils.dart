@@ -34,7 +34,7 @@ class Utils {
             7];
   }
 
-  static Vector3 Lerp(Vector3 a, Vector3 b, double t) {
+  static Vector3 lerp(Vector3 a, Vector3 b, double t) {
     return Vector3(
       (1.0 - t) * a.x + t * b.x,
       (1.0 - t) * a.y + t * b.y,
