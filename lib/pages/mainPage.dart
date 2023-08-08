@@ -9,10 +9,9 @@ const temperatureAlert = 22;
 typedef BackCallback = void Function();
 
 class MainPage extends StatefulWidget {
-  const MainPage(
-      {super.key, required this.changeBackCol, required this.undoBackCol});
+  MainPage({super.key, required this.changeBackCol, required this.undoBackCol});
 
-  final BackCallback changeBackCol, undoBackCol;
+  BackCallback changeBackCol, undoBackCol;
 
   @override
   State<StatefulWidget> createState() => _MainPageState();
