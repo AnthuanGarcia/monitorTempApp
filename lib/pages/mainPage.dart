@@ -4,12 +4,8 @@ import 'package:countup/countup.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../src/ambient.dart';
 
-typedef BackCallback = void Function();
-
 class MainPage extends StatefulWidget {
-  MainPage({super.key, required this.changeBackCol, required this.undoBackCol});
-
-  BackCallback changeBackCol, undoBackCol;
+  const MainPage({super.key});
 
   @override
   State<StatefulWidget> createState() => _MainPageState();

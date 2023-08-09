@@ -178,18 +178,13 @@ class _MonitorPageState extends State<MonitorPage>
   Animation<double>? /*_changeBackTemp,*/ _changeBackPage;
   //math.Vector3 currentCol = math.Vector3.zero();
   late Palette cols = Palette(
-        primary: math.Vector3(.6941, .8353, 1.0),
-        secondary: math.Vector3(0.9176, 0.5176, 1.0),
-        main: math.Vector3(.1333, .5804, 1.0),
-      ),
-      colors = Palette(
-        primary: math.Vector3(1.0, 0.5294, 0.0588),
-        secondary: math.Vector3(0.949, 0.0431, 0.4824),
-        main: math.Vector3(1.0, 0.6314, 0.2627),
-      );
+    primary: math.Vector3(.6941, .8353, 1.0),
+    secondary: math.Vector3(0.9176, 0.5176, 1.0),
+    main: math.Vector3(.1333, .5804, 1.0),
+  );
 
   final List<Widget> _pages = [
-    MainPage(changeBackCol: () {}, undoBackCol: () {}),
+    const MainPage(),
     const LogsTemperature(),
     const LogsMovement(),
     const Config(),
