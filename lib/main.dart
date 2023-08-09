@@ -111,7 +111,7 @@ void showFlutterNotification(RemoteMessage message) {
               htmlFormatBigText: true,
               htmlFormatContent: true,
             ),
-            icon: 'launch_background',
+            icon: '@mipmap/ic_launcher',
             color: Colors.redAccent,
             colorized: true,
             onlyAlertOnce: true,
