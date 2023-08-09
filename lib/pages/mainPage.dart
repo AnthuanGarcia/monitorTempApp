@@ -4,8 +4,6 @@ import 'package:countup/countup.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../src/ambient.dart';
 
-const temperatureAlert = 22;
-
 typedef BackCallback = void Function();
 
 class MainPage extends StatefulWidget {
@@ -92,14 +90,6 @@ class _MainPageState extends State<MainPage> {
 
           ambient = Ambient.fromDbSnap(
               snap.data!.snapshot.value as Map<Object?, Object?>);
-
-          if (ambient!.temperature.toInt() > temperatureAlert) {
-            //_controller!.forward();
-            widget.changeBackCol();
-          } else {
-            //_controller!.reverse();
-            widget.undoBackCol();
-          }
 
           return Center(
             child: Stack(

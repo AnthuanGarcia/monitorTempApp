@@ -30,51 +30,13 @@ void main(){
 		uv.y+=length(uv.x*0.5)/i*sin(uv.x*3.+t);
 		uv*=rot2D(time*.1);
 	}
-		
-	//vec3 a=.5*vec3(
-	//	sin(uv.x+cos(uv.y)+t),
-	//	cos(dot(uv,uv)+t),
-	//	sin(sin(uv.x)+cos(uv.y)+t)
-	//)+.5;
 	
 	col = mix(
-		/*mix(
-			//vec3(1.0, 1.0, 1.0),
-			//vec3(0.0, 0.1961, 0.9882),
-			mix(
-				mix(
-					vec3(.6941,.8353,1.),
-					vec3(1.0, 0.6941, 0.6941),
-					temperature
-				),
-		      	priCol //vec3(1.0, 0.5294, 0.0588),
-				colInt
-			),
-			mix(
-				mix(
-					vec3(0.9176, 0.5176, 1.0),
-					vec3(0.9922, 0.8039, 0.3961),
-					temperature
-				),
-				secCol //vec3(0.949, 0.0431, 0.4824),
-				colInt
-			),
-			uv.x * 0.5 + 0.5
-		),*/
 		mix(
 			priCol,
 			secCol,
 			uv.x * 0.5 + 0.5
 		),
-		/*mix(
-			mix(
-				vec3(.1333,.5804,1.),
-				vec3(1.0, 0.1333, 0.1333),
-				temperature
-			),
-			mainCol //vec3(1.0, 0.6314, 0.2627),
-			colInt
-		),*/
 		mainCol,
 		uv.y * 0.5 + 0.5
 	);

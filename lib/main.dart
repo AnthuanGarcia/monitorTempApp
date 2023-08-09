@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 //import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -15,6 +16,7 @@ import 'package:temp_monitor/pages/configPage.dart';
 import 'package:temp_monitor/pages/logsMovePage.dart';
 import 'package:temp_monitor/pages/logsTempsPage.dart';
 import 'package:temp_monitor/pages/mainPage.dart';
+import 'package:temp_monitor/src/ambient.dart';
 import 'package:temp_monitor/src/palette.dart';
 import 'package:temp_monitor/src/utils.dart';
 import 'package:vector_math/vector_math.dart' as math;
@@ -33,6 +35,7 @@ const channel = AndroidNotificationChannel(
 );
 
 bool isFlutterLocalNotificationsInitialized = false;
+const temperatureAlert = 22;
 
 //late SharedPreferences prefs;
 
@@ -166,6 +169,7 @@ class MonitorPage extends StatefulWidget {
 class _MonitorPageState extends State<MonitorPage>
     with TickerProviderStateMixin {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
+  DatabaseReference dbrt = FirebaseDatabase.instance.ref();
 
   final PageController _controller = PageController();
 
@@ -182,41 +186,13 @@ class _MonitorPageState extends State<MonitorPage>
         primary: math.Vector3(1.0, 0.5294, 0.0588),
         secondary: math.Vector3(0.949, 0.0431, 0.4824),
         main: math.Vector3(1.0, 0.6314, 0.2627),
-      ),
-      temp;
+      );
 
   final List<Widget> _pages = [
     MainPage(changeBackCol: () {}, undoBackCol: () {}),
     const LogsTemperature(),
     const LogsMovement(),
     const Config(),
-  ];
-
-  final List<Palette> _palettes = [
-    Palette(
-      // Main Page
-      primary: math.Vector3(.6941, .8353, 1.0),
-      secondary: math.Vector3(0.9176, 0.5176, 1.0),
-      main: math.Vector3(.1333, .5804, 1.0),
-    ),
-    Palette(
-      // Histogram Page
-      primary: math.Vector3(1.0, 0.5294, 0.0588),
-      secondary: math.Vector3(0.949, 0.0431, 0.4824),
-      main: math.Vector3(1.0, 0.6314, 0.2627),
-    ),
-    Palette(
-      // Logs Move Page
-      primary: math.Vector3(0.9098, 0.749, 0.8745),
-      secondary: math.Vector3(0.8157, 1.0, 0.0),
-      main: math.Vector3(.7216, 0.2706, 0.7216),
-    ),
-    Palette(
-      // Network Config Page
-      primary: math.Vector3(0.8941, 0.8431, 0.8863),
-      secondary: math.Vector3(0.0941, 0.2275, 0.5059),
-      main: math.Vector3(0.2902, 0.2824, 0.4157),
-    )
   ];
 
   final grad = Shady(assetName: 'assets/shaders/heightCols.frag', uniforms: [
@@ -253,7 +229,7 @@ class _MonitorPageState extends State<MonitorPage>
 
     _animationControllerColPage = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 2),
     );
 
     /*_changeBackTemp = Tween<double>(
@@ -272,55 +248,38 @@ class _MonitorPageState extends State<MonitorPage>
 
     _changeBackPage?.addListener(() {
       cols.primary = Utils.lerp(
-        cols.primary,
-        colors.primary,
+        math.Vector3(.6941, .8353, 1.0),
+        math.Vector3(1.0, 0.6941, 0.6941),
         _changeBackPage!.value,
       );
 
       cols.secondary = Utils.lerp(
-        cols.secondary,
-        colors.secondary,
+        math.Vector3(0.9176, 0.5176, 1.0),
+        math.Vector3(0.9922, 0.8039, 0.3961),
         _changeBackPage!.value,
       );
 
       cols.main = Utils.lerp(
-        cols.main,
-        colors.main,
+        math.Vector3(.1333, .5804, 1.0),
+        math.Vector3(1.0, 0.1333, 0.1333),
         _changeBackPage!.value,
       );
 
-      grad.setUniform<math.Vector3>("priCol", cols!.primary);
-      grad.setUniform<math.Vector3>("secCol", cols!.secondary);
-      grad.setUniform<math.Vector3>("mainCol", cols!.main);
+      grad.setUniform<math.Vector3>("priCol", cols.primary);
+      grad.setUniform<math.Vector3>("secCol", cols.secondary);
+      grad.setUniform<math.Vector3>("mainCol", cols.main);
     });
 
-    (_pages[0] as MainPage).changeBackCol = () {
-      _animationControllerColPage!.reset();
+    dbrt.onValue.listen((data) {
+      final ambient =
+          Ambient.fromDbSnap(data.snapshot.value as Map<Object?, Object?>);
 
-      colors = _palettes[0] = Palette(
-        primary: math.Vector3(1.0, 0.6941, 0.6941),
-        secondary: math.Vector3(0.9922, 0.8039, 0.3961),
-        main: math.Vector3(1.0, 0.1333, 0.1333),
-      );
-
-      temp = colors;
-
-      _animationControllerColPage!.forward();
-    };
-
-    (_pages[0] as MainPage).undoBackCol = () {
-      _animationControllerColPage!.reset();
-
-      colors = _palettes[0] = Palette(
-        primary: math.Vector3(.6941, .8353, 1.0),
-        secondary: math.Vector3(0.9176, 0.5176, 1.0),
-        main: math.Vector3(.1333, .5804, 1.0),
-      );
-
-      temp = colors;
-
-      _animationControllerColPage!.forward();
-    };
+      if (ambient.temperature.toInt() > temperatureAlert) {
+        _animationControllerColPage!.forward();
+      } else {
+        _animationControllerColPage!.reverse();
+      }
+    });
 
     FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -372,13 +331,14 @@ class _MonitorPageState extends State<MonitorPage>
               scrollDirection: Axis.vertical,
               controller: _controller,
               children: _pages,
-              onPageChanged: (page) {
+              /*onPageChanged: (page) {
                 _animationControllerColPage!.reset();
                 setState(() {
                   colors = _palettes[page];
                   _animationControllerColPage!.forward();
                 });
               },
+              */
             )),
           ],
         ),
