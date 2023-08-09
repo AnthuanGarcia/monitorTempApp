@@ -1,28 +1,23 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-//import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:shady/shady.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:temp_monitor/pages/configPage.dart';
-import 'package:temp_monitor/pages/logsMovePage.dart';
-import 'package:temp_monitor/pages/logsTempsPage.dart';
-import 'package:temp_monitor/pages/mainPage.dart';
+import 'package:temp_monitor/pages/config_page.dart';
+import 'package:temp_monitor/pages/logs_move_page.dart';
+import 'package:temp_monitor/pages/logs_temps_page.dart';
+import 'package:temp_monitor/pages/main_page.dart';
 import 'package:temp_monitor/src/ambient.dart';
 import 'package:temp_monitor/src/palette.dart';
 import 'package:temp_monitor/src/utils.dart';
 import 'package:vector_math/vector_math.dart' as math;
-//import 'package:vector_math/vector_math.dart';
-//import 'package:temp_monitor/src/shader_painter.dart';
-//import 'package:flutter_shaders/flutter_shaders.dart';
 
 //const serverHost = "192.168.1.168:8080";
 
@@ -36,8 +31,6 @@ const channel = AndroidNotificationChannel(
 
 bool isFlutterLocalNotificationsInitialized = false;
 const temperatureAlert = 22;
-
-//late SharedPreferences prefs;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,7 +61,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await setupFlutterNotifications();
   await FirebaseMessaging.instance.setAutoInitEnabled(true);
   showFlutterNotification(message);
-  print('Handling a background message ${message.messageId}');
+  //print('Handling a background message ${message.messageId}');
 }
 
 Future<void> setupFlutterNotifications() async {
@@ -77,12 +70,6 @@ Future<void> setupFlutterNotifications() async {
   }
 
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
-  /*
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.requestPermission();*/
 
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
@@ -93,10 +80,7 @@ Future<void> setupFlutterNotifications() async {
 }
 
 void showFlutterNotification(RemoteMessage message) {
-  //RemoteNotification? notification = message.notification;
-  //AndroidNotification? android = message.notification?.android;
   final data = message.data;
-  //if (notification != null && android != null) {
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   flutterLocalNotificationsPlugin.getActiveNotifications().then(
@@ -148,7 +132,6 @@ class MonitorTemp extends StatelessWidget {
     return MaterialApp(
       title: 'Test',
       debugShowCheckedModeBanner: false,
-      //showPerformanceOverlay: true,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -176,7 +159,6 @@ class _MonitorPageState extends State<MonitorPage>
   AnimationController? /*_animationControllerTemp,*/
       _animationControllerColPage;
   Animation<double>? /*_changeBackTemp,*/ _changeBackPage;
-  //math.Vector3 currentCol = math.Vector3.zero();
   late Palette cols = Palette(
     primary: math.Vector3(.6941, .8353, 1.0),
     secondary: math.Vector3(0.9176, 0.5176, 1.0),
@@ -200,41 +182,14 @@ class _MonitorPageState extends State<MonitorPage>
     UniformVec3(key: 'mainCol', initialValue: math.Vector3(.1333, .5804, 1.0)),
   ]);
 
-  int _selectedIndex = 0;
-
-  /*void setCol() {
-    _animationControllerTemp!.forward();
-  }
-
-  void undoCol() {
-    _animationControllerTemp!.reverse();
-  }
-
-  void changeColPage(Palette colors) {
-  }*/
-
   @override
   void initState() {
     super.initState();
-
-    /*_animationControllerTemp = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    );*/
 
     _animationControllerColPage = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-
-    /*_changeBackTemp = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(_animationControllerTemp!);
-
-    _changeBackTemp!.addListener(() {
-      grad.setUniform<double>('temperature', _changeBackTemp!.value);
-    });*/
 
     _changeBackPage = Tween<double>(
       begin: 0.0,
@@ -302,9 +257,7 @@ class _MonitorPageState extends State<MonitorPage>
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
-    //_animationControllerTemp!.dispose();
     _animationControllerColPage!.dispose();
   }
 
@@ -322,19 +275,12 @@ class _MonitorPageState extends State<MonitorPage>
               child: ShadyCanvas(grad),
             ),
             Center(
-                child: PageView(
-              scrollDirection: Axis.vertical,
-              controller: _controller,
-              children: _pages,
-              /*onPageChanged: (page) {
-                _animationControllerColPage!.reset();
-                setState(() {
-                  colors = _palettes[page];
-                  _animationControllerColPage!.forward();
-                });
-              },
-              */
-            )),
+              child: PageView(
+                scrollDirection: Axis.vertical,
+                controller: _controller,
+                children: _pages,
+              ),
+            ),
           ],
         ),
       ),
