@@ -3,7 +3,7 @@
 uniform vec3 resolution;
 uniform float time;
 //uniform float temperature;
-uniform float colInt;
+//uniform float colInt;
 uniform vec3 priCol; // Primary
 uniform vec3 secCol; // Secondary
 uniform vec3 mainCol; // Main

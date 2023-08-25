@@ -176,7 +176,7 @@ class _MonitorPageState extends State<MonitorPage>
     UniformVec3(key: 'resolution', transformer: UniformVec3.resolution),
     UniformFloat(key: 'time', transformer: UniformFloat.secondsPassed),
     //UniformFloat(key: 'temperature'),
-    UniformFloat(key: 'colInt'),
+    //UniformFloat(key: 'colInt'),
     UniformVec3(key: 'priCol', initialValue: math.Vector3(.6941, .8353, 1.0)),
     UniformVec3(key: 'secCol', initialValue: math.Vector3(0.9176, 0.5176, 1.0)),
     UniformVec3(key: 'mainCol', initialValue: math.Vector3(.1333, .5804, 1.0)),
