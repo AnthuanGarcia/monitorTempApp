@@ -129,6 +129,7 @@ class _ConfigState extends State<Config> {
                       ),
                       InkWell(
                         onTap: () {
+                          isConnected = false;
                           http.get(Uri.parse("http://$ip:80/reset")).then(
                             (res) {
                               if (res.statusCode == 200) {
@@ -165,25 +166,26 @@ class _ConfigState extends State<Config> {
                             },
                           );
                         },
-                        child: Container(
-                          width: MediaQuery.of(context).size.height * .3,
-                          padding: const EdgeInsets.all(16),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(60),
-                            ),
-                          ),
-                          child: isConnected
-                              ? const Text(
+                        child: isConnected
+                            ? Container(
+                                width: MediaQuery.of(context).size.height * .3,
+                                padding: const EdgeInsets.all(16),
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(60),
+                                  ),
+                                ),
+                                child: const Text(
                                   "Reiniciar",
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w300),
-                                )
-                              : const CircularProgressIndicator(),
-                        ),
+                                ),
+                              )
+                            : const CircularProgressIndicator(
+                                color: Colors.white),
                       )
                     ],
                   );

@@ -40,7 +40,7 @@ class _LogsMovementState extends State<LogsMovement> {
                 docs[index].id.split("-").map((d) => int.parse(d)).toList();
 
             String title =
-                "${Utils.weekDay(date[0], date[1], date[2])}, ${date[0]}/${date[1]}/${date[2]}";
+                "${Utils.weekDay(date[2], date[1], date[0])}, ${date[2]}/${date[1]}/${date[0]}";
 
             final logs = docs[index].data()["move_logs"] as List;
 
